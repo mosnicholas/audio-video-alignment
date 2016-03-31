@@ -13,11 +13,34 @@ TRUMP_FILENAME = 'china.mp4'
 TRUMP_OUTPUT_RAW_FILEPATH = os.path.join(RAW_VIDEO_FOLDER, 'trump', TRUMP_FILENAME)
 TRUMP_OUTPUT_CLIPPED_FOLDER = os.path.join(CLIPPED_VIDEO_FOLDER, 'trump')
 
+def create_millisecond_subtitles():
+  with open(os.path.join(RAW_VIDEO_FOLDER, 'trump', 'china.srt'), 'w') as china:
+    for i in xrange(1, 3 * 60 * 100):
+      china.write(str(i))
+      time = 1 + i * 10
+      china.write("\n")
+      seconds = (time / 1000) % 60
+      minutes = (time / 60000) % 60
+      currTime = "00:%02d:%02d,%03d" % (minutes, seconds, time % 1000)
+      nextMillisecond = time % 1000 + 9
+      if (nextMillisecond == 1000):
+        nextMillisecond = 0
+        seconds = seconds + 1
+        minutes = minutes + seconds/60
+        seconds = seconds % 60
+      nextTime = "00:%02d:%02d,%03d" % (minutes, seconds, nextMillisecond)
+      china.write("%s --> %s" %(currTime, nextTime))
+      china.write("\n")
+      china.write("time: " + currTime)
+      china.write("\n")
+      china.write("\n")
+  return True
 
 def download_trump_video():
   if not os.path.isfile(TRUMP_OUTPUT_RAW_FILEPATH):
     command = 'youtube-dl %s -o %s' % (VIDEO_YOUTUBE_ID, TRUMP_FILENAME)
     if subprocess.call(command, shell=True) == 0:
+      create_millisecond_subtitles()
       shutil.move(TRUMP_FILENAME, TRUMP_OUTPUT_RAW_FILEPATH)
     else:
       return False
@@ -25,7 +48,9 @@ def download_trump_video():
 
 def clip_trump_videos():
   # To write video to file: clip.write_videofile(outfile, codec='libx264', audio_codec='aac', temp_audiofile='china-%02d.m4a' % i, remove_temp=True)
-  cuts = [(3, 5), (6, 8), (9, 12)]
+  # moviepy help: http://zulko.github.io/blog/2014/06/21/some-more-videogreping-with-python/ 
+  #               https://zulko.github.io/moviepy/ref/ref.html
+  cuts = [(1.55, 2.54), ()]
   video = VideoFileClip(TRUMP_OUTPUT_RAW_FILEPATH)
   subclips = [video.subclip(start, end) for (start, end) in cuts]
   for i in xrange(len(subclips)):
@@ -37,5 +62,5 @@ def clip_trump_videos():
   return True
 
 if __name__ == '__main__':
-  clip_trump_videos()
+  create_millisecond_subtitles()
 

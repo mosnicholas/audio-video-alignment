@@ -1,4 +1,6 @@
 
+.DS_STORE
+*.srt
 *.mp4
 *.mp3
 *.m4a
