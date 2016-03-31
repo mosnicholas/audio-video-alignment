@@ -22,11 +22,11 @@ def create_millisecond_subtitles():
       seconds = (time / 1000) % 60
       minutes = (time / 60000) % 60
       currTime = "00:%02d:%02d,%03d" % (minutes, seconds, time % 1000)
-      nextMillisecond = time % 1000 + 9
-      if (nextMillisecond == 1000):
-        nextMillisecond = 0
-        seconds = seconds + 1
-        minutes = minutes + seconds/60
+      nextMillisecond = time % 1000 + 10
+      if (nextMillisecond > 1000):
+        nextMillisecond = 1
+        seconds += 1
+        minutes += seconds/60
         seconds = seconds % 60
       nextTime = "00:%02d:%02d,%03d" % (minutes, seconds, nextMillisecond)
       china.write("%s --> %s" %(currTime, nextTime))
