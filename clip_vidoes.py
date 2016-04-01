@@ -2,7 +2,7 @@
 import os
 import shutil
 import subprocess
-from moviepy.editor import VideoFileClip
+from moviepy.editor import VideoFileClip, AudioFileClip
 
 VIDEO_YOUTUBE_ID = 'RDrfE9I8_hs'
 DATA_FOLDER = 'data'
