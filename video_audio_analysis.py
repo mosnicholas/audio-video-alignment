@@ -80,4 +80,4 @@ def plotstft(audiopath, binsize=2**10, plotpath=None, colormap="jet"):
     plt.clf()
 
 if __name__ == '__main__':
-  plotstft('./data/clipped/trump/audio/china-000.m4a')
+  plotstft('./data/clipped/trump/audio/china-058.m4a')
