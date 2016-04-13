@@ -1,5 +1,6 @@
 
 import os
+import csv
 import shutil
 import subprocess
 from random import random as rand
@@ -63,17 +64,27 @@ def create_trump_dataset(movie_title):
 def create_movie_dataset(movie_title):
   movie_path = os.path.join(RAW_VIDEO_FOLDER, movie_title)
   outfolder = os.path.join(CLIPPED_VIDEO_FOLDER, 'hitch_hiker')
+  outcsv = os.path.join(CLIPPED_VIDEO_FOLDER, 'hitch_hiker', 'offsets.csv')
+  offsets = []
   video = VideoFileClip(movie_path)
   beginning_index = 23
-  for i in xrange(beginning_index, int(video.duration) - 4):
+  for i in xrange(beginning_index, 28): # int(video.duration) - 4
+    shifted = i - beginning_index
     clip = video.subclip(i, i + 4)
     video_title = 'movie-%04d-%s.mp4'
-    video_a = os.path.join(outfolder, video_title % (i - beginning_index, 'a'))
-    video_b = os.path.join(outfolder, video_title % (i - beginning_index, 'b'))
+    video_a = os.path.join(outfolder, video_title % (shifted, 'a'))
+    video_b = os.path.join(outfolder, video_title % (shifted, 'b'))
     index_a = rand() + 2
     index_b = index_a - rand()
+    offsets.append({'id': shifted, 'offset': round(index_b, 3)})
     clip.subclip(0, index_a).write_videofile(video_a, codec='libx264', audio=False)
     clip.subclip(index_b).write_videofile(video_b, codec='libx264', audio=False)
+
+  with open(outcsv, 'w') as csvfile:
+    w = csv.DictWriter(csvfile, fieldnames=offsets[0].keys())
+    w.writeheader()
+    w.writerows(offsets)
+
   return True
 
 def download_trump():
