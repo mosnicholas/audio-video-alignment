@@ -64,11 +64,12 @@ def create_movie_dataset(movie_title):
   movie_path = os.path.join(RAW_VIDEO_FOLDER, movie_title)
   outfolder = os.path.join(CLIPPED_VIDEO_FOLDER, 'hitch_hiker')
   video = VideoFileClip(movie_path)
-  for i in xrange(23, int(video.duration) - 4):
+  beginning_index = 23
+  for i in xrange(beginning_index, int(video.duration) - 4):
     clip = video.subclip(i, i + 4)
     video_title = 'movie-%04d-%s.mp4'
-    video_a = os.path.join(outfolder, video_title % (i, 'a'))
-    video_b = os.path.join(outfolder, video_title % (i, 'b'))
+    video_a = os.path.join(outfolder, video_title % (i - beginning_index, 'a'))
+    video_b = os.path.join(outfolder, video_title % (i - beginning_index, 'b'))
     index_a = rand() + 2
     index_b = index_a - rand()
     clip.subclip(0, index_a).write_videofile(video_a, codec='libx264', audio=False)
