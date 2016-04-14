@@ -1,6 +1,8 @@
 #Audio / Video Synchronization
-###Brian Pugh & Nicholas Moschopoulos
-###Berkeley Computer Science 280
+Brian Pugh & Nicholas Moschopoulos
+Berkeley Computer Science 280
+
+###Abstract
 
 This project explores techniques for recombining desynchronized audio and video tracks.
 
