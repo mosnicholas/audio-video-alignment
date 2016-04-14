@@ -1,6 +1,5 @@
 #Audio / Video Synchronization
-Brian Pugh & Nicholas Moschopoulos
-
+Brian Pugh & Nicholas Moschopoulos <br />
 Berkeley Computer Science 280
 
 ###Abstract
