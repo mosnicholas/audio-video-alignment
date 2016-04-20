@@ -33,7 +33,6 @@ def main():
   video = VideoFileClip(args.source_path, audio=False)
   framerate = video.fps
   width = (np.size(video.get_frame(0), 1) - args.middle_gap_pixel_size) / 2
-  print 'width is ' + str(width)
   left_video = moviepy.video.fx.all.crop(video, x1=0, width=width)
   right_video = moviepy.video.fx.all.crop(video, x1=width + args.middle_gap_pixel_size, width=width)
   right_frame_iterator = right_video.iter_frames()
@@ -50,10 +49,10 @@ def main():
       offset = randint(1,10)
       second_start = first_start + offset
       offset_left = randint(0, 1) == 1
-    if (ind <= first_start and first_start < ind + 10):
+    if (ind >= first_start and ind < first_start + 10):
       right_frames.append(right_frame)
       left_frames.append(left_frame)
-    if (ind <= second_start and second_start < ind + 10):
+    if (ind >= second_start and ind < second_start + 10):
       if (offset_left):
         offset_frames.append(left_frame)
       else:
@@ -61,41 +60,41 @@ def main():
     if (ind % 20 == 19):
       if args.output_images:
         for frame_ind, left_frame in enumerate(left_frames):
-          misc.toimage(left_frame, cmin=0.0, cmax=np.max(left_frame)).save(('seg-%06d-frame-%02d-left.jpeg').format(output_ind, frame_ind))
+          misc.toimage(left_frame, cmin=np.min(left_frame), cmax=np.max(left_frame)).save(os.path.join(args.target_folder, ('seg-{:06d}-frame-{:02d}-left.jpeg').format(output_ind, frame_ind)))
         for frame_ind, right_frame in enumerate(right_frames):
-          misc.toimage(right_frame, cmin=0.0, cmax=np.max(right_frame)).save(('seg-%06d-frame-%02d-right.jpeg').format(output_ind, frame_ind))
+          misc.toimage(right_frame, cmin=np.min(right_frame), cmax=np.max(right_frame)).save(os.path.join(args.target_folder, ('seg-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, frame_ind)))
       else:
         left_video_out = ImageSequenceClip(left_frames, fps=framerate)
-        left_video_out.write_videofile(os.path.join(args.target_folder, 'seg-%06d-left.mp4' % output_ind), codec='libx264', audio=False)
+        left_video_out.write_videofile(os.path.join(args.target_folder, 'seg-{:06d}-left.mp4' % output_ind), codec='libx264', audio=False)
         right_video_out = ImageSequenceClip(right_frames, fps=framerate)
-        right_video_out.write_videofile(os.path.join(args.target_folder, 'seg-%06d-right.mp4' % output_ind), codec='libx264', audio=False)
+        right_video_out.write_videofile(os.path.join(args.target_folder, 'seg-{:06d}-right.mp4' % output_ind), codec='libx264', audio=False)
       offsets.append({ 'id': '%06d' % output_ind, 'offset_frames': 0 })
       output_ind += 1
       if (offset_left):
         if args.output_images:
           for frame_ind, offset_frame in enumerate(offset_frames):
-            misc.toimage(offset_frame, cmin=0.0, cmax=np.max(left_frame)).save(('seg-%06d-frame-%02d-left.jpeg').format(output_ind, frame_ind))
+            misc.toimage(offset_frame, cmin=np.min(left_frame), cmax=np.max(left_frame)).save(os.path.join(args.target_folder, ('seg-{:06d}-frame-{:02d}-left.jpeg').format(output_ind, frame_ind)))
           for frame_ind, right_frame in enumerate(right_frames):
-            misc.toimage(right_frame, cmin=0.0, cmax=np.max(right_frame)).save(('seg-%06d-frame-%02d-right.jpeg').format(output_ind, frame_ind))
+            misc.toimage(right_frame, cmin=np.min(right_frame), cmax=np.max(right_frame)).save(os.path.join(args.target_folder, ('seg-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, frame_ind)))
         else:
           left_video_out = ImageSequenceClip(offset_frames, fps=framerate)
-          left_video_out.write_videofile(os.path.join(args.target_folder, 'seg-%06d-left.mp4' % output_ind), codec='libx264', audio=False)
+          left_video_out.write_videofile(os.path.join(args.target_folder, 'seg-{:06d}-left.mp4' % output_ind), codec='libx264', audio=False)
           right_video_out = ImageSequenceClip(right_frames, fps=framerate)
-          right_video_out.write_videofile(os.path.join(args.target_folder, 'seg-%06d-right.mp4' % output_ind), codec='libx264', audio=False)
+          right_video_out.write_videofile(os.path.join(args.target_folder, 'seg-{:06d}-right.mp4' % output_ind), codec='libx264', audio=False)
       else:
         if args.output_images:
           for frame_ind, left_frame in enumerate(left_frames):
-            misc.toimage(left_frame, cmin=0.0, cmax=np.max(left_frame)).save(('seg-%06d-frame-%02d-left.jpeg').format(output_ind, frame_ind))
+            misc.toimage(left_frame, cmin=np.min(left_frame), cmax=np.max(left_frame)).save(os.path.join(args.target_folder, ('seg-{:06d}-frame-{:02d}-left.jpeg').format(output_ind, frame_ind)))
           for frame_ind, offset_frame in enumerate(offset_frames):
-            misc.toimage(offset_frame, cmin=0.0, cmax=np.max(right_frame)).save(('seg-%06d-frame-%02d-right.jpeg').format(output_ind, frame_ind))
+            misc.toimage(offset_frame, cmin=np.min(right_frame), cmax=np.max(right_frame)).save(os.path.join(args.target_folder, ('seg-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, frame_ind)))
         else:
           left_video_out = ImageSequenceClip(left_frames, fps=framerate)
-          left_video_out.write_videofile(os.path.join(args.target_folder, 'seg-%06d-left.mp4' % output_ind), codec='libx264', audio=False)
+          left_video_out.write_videofile(os.path.join(args.target_folder, 'seg-{:06d}-left.mp4' % output_ind), codec='libx264', audio=False)
           right_video_out = ImageSequenceClip(offset_frames, fps=framerate)
-          right_video_out.write_videofile(os.path.join(args.target_folder, 'seg-%06d-right.mp4' % output_ind), codec='libx264', audio=False)
-      offsets.append({ 'id': '%06d' % output_ind, 'offset_frames': offset })
+          right_video_out.write_videofile(os.path.join(args.target_folder, 'seg-{:06d}-right.mp4' % output_ind), codec='libx264', audio=False)
+      offsets.append({ 'id': '{:06d}'.format(output_ind), 'offset_frames': offset })
     if (ind % 1000 == 0):
-      print('Finished processing %d datapoints.' % output_ind)
+      print('Finished processing {:d} datapoints.'.format(output_ind))
   with open(offset_csv, 'w') as offset_csv_file:
     w = csv.DictWriter(offset_csv_file, fieldnames=['id', 'offset_frames'])
     w.writeheader()
