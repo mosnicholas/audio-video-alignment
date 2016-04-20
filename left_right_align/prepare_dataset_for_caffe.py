@@ -62,14 +62,13 @@ def main():
 			for frame_ind in range(0, 10):
 				stacked[:, :, frame_ind] = imread(path_filename_base + '-frame-{:02d}'.format(frame_ind) + '-right.jpeg')
 				stacked[:, :, 10 + frame_ind] = imread(path_filename_base + '-frame-{:02d}'.format(frame_ind) + '-left.jpeg')
-			"""stacked_data = caffe.io.array_to_datum(stacked)
+			stacked_data = caffe.io.array_to_datum(stacked)
 			if in_train[segment_ind]:
 				train_images_writer.put(filename_base, stacked_data.SerializeToString())
 				train_labels_writer.put(filename_base, offsets[segment_ind])
 			else:
 				test_images_writer.put(filename_base, stacked_data.SerializeToString())
 				test_labels_writer.put(filename_base, offsets[segment_ind])
-				"""
 			if segment_ind % 50 == 0:
 				print str(segment_ind) + ' segments processed...'
 	train_images_lmdb.close()
