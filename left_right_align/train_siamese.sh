@@ -2,4 +2,4 @@
 
 TOOLS=./build/tools
 
-$TOOLS/caffe train --solver=examples/siamese/mnist_siamese_solver.prototxt
+$TOOLS/caffe train --solver=siamese_solver.prototxt
