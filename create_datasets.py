@@ -74,7 +74,7 @@ def create_movie_dataset():
   # video = video.fl_image(greyscale)
   fps = video.fps
   first_frame = int(23 * fps) + 1
-  for i in xrange(first_frame, first_frame + 5): # int(video.duration * fps) - 10
+  for i in xrange(first_frame, int(video.duration * fps) - 10):
     shifted = i - first_frame
     video_title = 'seq-%06d-frame-%%02d-%s.jpg'
     video_a = os.path.join(outfolder, video_title % (shifted, 'left'))
@@ -98,3 +98,5 @@ def download_trump():
 def download_movie():
   return download_raw_youtube_video(MOVIE_ID, 'hitch_hiker.mp4')
 
+if __name__ == '__main__':
+  create_movie_dataset()
