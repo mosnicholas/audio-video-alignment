@@ -5,6 +5,7 @@ import csv
 #import caffe
 import lmdb
 import numpy as np
+from multiprocessing import Pool
 from scipy.ndimage import imread
 
 parser = argparse.ArgumentParser(
@@ -30,6 +31,25 @@ def read_offsets(filename):
 		for row in offsets_reader:
 			offsets.append(row[1])
 	return offsets
+
+def process_ind(segment_ind, train_images_writer, train_labels_writer, test_images_writer, test_labels_writer):
+		filename_base = 'seg-{:06d}'.format(segment_ind + 1)
+		path_filename_base = os.path.join(args.source_folder, filename_base)
+		sample_frame = np.array(imread(path_filename_base + '-frame-{:02d}'.format(0) + '-right.jpeg'))
+		stacked = np.zeros((np.size(sample_frame, 0), np.size(sample_frame, 1), 20))
+		right_frames = []
+		for frame_ind in range(0, 10):
+			stacked[:, :, frame_ind] = imread(path_filename_base + '-frame-{:02d}'.format(frame_ind) + '-right.jpeg')
+			stacked[:, :, 10 + frame_ind] = imread(path_filename_base + '-frame-{:02d}'.format(frame_ind) + '-left.jpeg')
+		stacked_data = caffe.io.array_to_datum(stacked)
+		if in_train[segment_ind]:
+			train_images_writer.put(filename_base, stacked_data.SerializeToString())
+			train_labels_writer.put(filename_base, offsets[segment_ind])
+		else:
+			test_images_writer.put(filename_base, stacked_data.SerializeToString())
+			test_labels_writer.put(filename_base, offsets[segment_ind])
+		if segment_ind % 50 == 0:
+			print str(segment_ind) + ' segments processed...'
 
 def main():
 	offsets = read_offsets('offsets.csv')
@@ -73,24 +93,8 @@ def main():
 		else:
 			start_index = 0
 
-		for segment_ind in range(start_index, num_segments):
-			filename_base = 'seg-{:06d}'.format(segment_ind + 1)
-			path_filename_base = os.path.join(args.source_folder, filename_base)
-			sample_frame = np.array(imread(path_filename_base + '-frame-{:02d}'.format(0) + '-right.jpeg'))
-			stacked = np.zeros((np.size(sample_frame, 0), np.size(sample_frame, 1), 20))
-			right_frames = []
-			for frame_ind in range(0, 10):
-				stacked[:, :, frame_ind] = imread(path_filename_base + '-frame-{:02d}'.format(frame_ind) + '-right.jpeg')
-				stacked[:, :, 10 + frame_ind] = imread(path_filename_base + '-frame-{:02d}'.format(frame_ind) + '-left.jpeg')
-			stacked_data = caffe.io.array_to_datum(stacked)
-			if in_train[segment_ind]:
-				train_images_writer.put(filename_base, stacked_data.SerializeToString())
-				train_labels_writer.put(filename_base, offsets[segment_ind])
-			else:
-				test_images_writer.put(filename_base, stacked_data.SerializeToString())
-				test_labels_writer.put(filename_base, offsets[segment_ind])
-			if segment_ind % 50 == 0:
-				print str(segment_ind) + ' segments processed...'
+		pool = Pool(8)
+		pool.map(lambda x: process_ind(x, train_images_writer, train_labels_writer, test_images_writer, test_labels_writer),  range(start_index, num_segments)):
 	train_images_lmdb.close()
 	train_labels_lmdb.close()
 	test_images_lmdb.close()
