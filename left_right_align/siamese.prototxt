@@ -89,8 +89,6 @@ layer {
   }
   convolution_param {
     num_output: 32
-    kernel_size: 1
-    kernel_size: 7
     kernel_size: 7
     stride: 3 
     weight_filler {
@@ -108,8 +106,6 @@ layer {
   top: "pool1"
   pooling_param {
     pool: MAX
-    kernel_size: 1
-    kernel_size: 4
     kernel_size: 4
     stride: 4
   }
@@ -240,8 +236,6 @@ layer {
   }
   convolution_param {
     num_output: 32
-    kernel_size: 1
-    kernel_size: 7
     kernel_size: 7
     stride: 3
     weight_filler {
@@ -259,8 +253,6 @@ layer {
   top: "pool1_p"
   pooling_param {
     pool: MAX
-    kernel_size: 1
-    kernel_size: 4
     kernel_size: 4
     stride: 4
   }
