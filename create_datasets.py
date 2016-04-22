@@ -3,7 +3,8 @@ import os
 import csv
 import shutil
 import subprocess
-from random import random as rand
+import numpy as np
+from random import randint
 from moviepy.editor import VideoFileClip, AudioFileClip
 
 TRUMP_ID = 'RDrfE9I8_hs'
@@ -11,6 +12,9 @@ MOVIE_ID = 'XIeFKTbg3Aw'
 DATA_FOLDER = 'data'
 RAW_VIDEO_FOLDER = os.path.join(DATA_FOLDER, 'raw')
 CLIPPED_VIDEO_FOLDER = os.path.join(DATA_FOLDER, 'clipped')
+
+def greyscale(image):
+  return np.dot(image[:, :, :3], [0.299, 0.587, 0.114])
 
 def create_millisecond_subtitles(outfile):
   with open(os.path.join(RAW_VIDEO_FOLDER, outfile.replace('mp4', 'srt')), 'w') as subs:
@@ -67,19 +71,19 @@ def create_movie_dataset():
   outcsv = os.path.join(CLIPPED_VIDEO_FOLDER, 'hitch_hiker', 'offsets.csv')
   offsets = []
   video = VideoFileClip(movie_path)
-  beginning_index = 23
+  # video = video.fl_image(greyscale)
   fps = video.fps
-  for i in xrange(beginning_index, 28): # int(video.duration) - 4
-    shifted = i - beginning_index
-    clip = video.subclip(i, i + 4)
-    video_title = 'seq-%04d-frame-%%02d-%s.jpg'
-    video_a = os.path.join(outfolder, video_title % (i - beginning_index, 'left'))
-    video_b = os.path.join(outfolder, video_title % (i - beginning_index, 'right'))
-    index_a = rand() + 2
-    index_b = index_a - rand()
-    offsets.append({'id': shifted, 'offset': int(index_b * fps) + 2})
-    clip.subclip(0, index_a).write_images_sequence(video_a)
-    clip.subclip(index_b).write_images_sequence(video_b)
+  first_frame = int(23 * fps) + 1
+  for i in xrange(first_frame, first_frame + 5): # int(video.duration * fps) - 10
+    shifted = i - first_frame
+    video_title = 'seq-%06d-frame-%%02d-%s.jpg'
+    video_a = os.path.join(outfolder, video_title % (shifted, 'left'))
+    video_b = os.path.join(outfolder, video_title % (shifted, 'right'))
+    index_a = randint(4, 8)
+    index_b = randint(4, index_a)
+    offsets.append({'id': shifted, 'offset': index_b + 1})
+    video.subclip(i/fps, (i + index_a + 2)/fps).write_images_sequence(video_a)
+    video.subclip((i + index_b)/fps, (i + 10)/fps).write_images_sequence(video_b)
 
   with open(outcsv, 'w') as csvfile:
     w = csv.DictWriter(csvfile, fieldnames=offsets[0].keys())
