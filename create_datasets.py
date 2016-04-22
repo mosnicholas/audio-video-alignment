@@ -92,13 +92,13 @@ def create_movie_dataset(movie_path, target_folder):
   num_frames = int(video.fps * video.duration)
   video = video.set_fps(1).set_duration(num_frames)
   offset_file = os.path.join(target_folder, 'offsets.npz')
-  resume_tracker = os.path.join(target_folder, 'last_seen.txt')
+  resume_tracker = os.path.join(target_folder, 'last_seen_dataset.txt')
   first_frame = 24
 
   num_frames = num_frames - 10
 
   if args.resume_from_dataset:
-    first_frame += int(np.loadtxt(resume_tracker)) # We should remove files larger than this one to prevent errors with overlap.
+    first_frame = int(np.loadtxt(resume_tracker)) # We should remove files larger than this one to prevent errors with overlap.
   else:
     offsets = np.random.randint(2, 10, num_frames)
     np.savez_compressed(offset_file, offsets=offsets)
@@ -118,13 +118,16 @@ def load_data_into_lmdb(data_source_folder, target_folder):
   offset_file_path = os.path.join(data_source_folder, 'offsets.npz')
   if not os.path.isdir(target_folder): os.makedirs(target_folder)
   train_test_file = os.path.join(target_folder, 'train_test_indices.npz')
+  resume_tracker = os.path.join(target_folder, 'last_seen_lmdb.txt')
 
   offsets = np.load(offset_file_path)['offsets']
   num_splits = len(offsets)
 
   if args.resume_from_lmdb:
     train = np.load(train_test_file)['train']
+    first_split = int(np.loadtxt(resume_tracker))
   else:
+    first_split = 0
     train = np.ones((num_splits), dtype=bool)
     train[np.random.randint(0, num_splits, 1000)] = False
     np.savez_compressed(train_test_file, train=train)
@@ -144,7 +147,7 @@ def load_data_into_lmdb(data_source_folder, target_folder):
       frames_test.begin(write=True) as frames_test_writer, \
       labels_test.begin(write=True) as labels_test_writer:
 
-    for split in xrange(num_splits):
+    for split in xrange(first_split, num_splits):
       stacked = np.zeros((frame_shape[0], frame_shape[1], 20))
       db_title = 'seg-%06d' % split
       frames = frame_paths % split
@@ -167,6 +170,7 @@ def load_data_into_lmdb(data_source_folder, target_folder):
         labels_test_writer.put(db_title, split_ind)
 
       if split % 500 == 0:
+        np.savetxt(resume_tracker, np.ones((1)) * split)
         print str(split) + ' segments processed...'
 
     train_images_lmdb.close()
