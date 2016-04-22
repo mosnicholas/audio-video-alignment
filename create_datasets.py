@@ -29,8 +29,6 @@ parser.add_argument('--video_source', default=movie_path,
   help='The path to the source video')
 parser.add_argument('--target_folder', default=outfolder,
   help='The parent directory for the dataset.')
-parser.add_argument('--resume_from_dataset', action='store_true',
-  help='The segment to resume creating the dataset from.')
 parser.add_argument('--resume_from_lmdb', action='store_true',
   help='The segment to resume loading into lmdb from.')
 args = parser.parse_args()
@@ -92,25 +90,21 @@ def create_movie_dataset(movie_path, target_folder):
   num_frames = int(video.fps * video.duration)
   video = video.set_fps(1).set_duration(num_frames)
   offset_file = os.path.join(target_folder, 'offsets.npz')
-  resume_tracker = os.path.join(target_folder, 'last_seen_dataset.txt')
-  first_frame = 24
+  earliest_frame = 700
 
-  num_frames = num_frames - 10
-
-  if args.resume_from_dataset:
-    first_frame = int(np.loadtxt(resume_tracker)) # We should remove files larger than this one to prevent errors with overlap.
-  else:
+  num_done = len(os.listdir(target_folder))
+  if num_done == 0:
+    first_frame = earliest_frame
     offsets = np.random.randint(2, 10, num_frames)
     np.savez_compressed(offset_file, offsets=offsets)
+  else:
+    first_frame = (num_done - 1)/10 + earliest_frame
 
   for i in xrange(first_frame, num_frames):
-    shifted = i - first_frame
+    shifted = i - earliest_frame
     video_title = 'seg-%06d-frame-%%02d.jpg'
     video_path = os.path.join(target_folder, video_title % shifted)
     video.subclip(i, i + 10).write_images_sequence(video_path)
-    if i % 500 == 0: np.savetxt(resume_tracker, np.ones((1)) * i)
-
-  if i == num_frames: os.remove(resume_tracker)
 
   return True
 
