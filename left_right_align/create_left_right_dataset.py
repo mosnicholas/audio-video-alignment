@@ -15,6 +15,10 @@ parser.add_argument('--target_folder', default='./data/dataset',
   help='The parent directory for the dataset.')
 parser.add_argument('--source_path', default='./data/source/hitch_hiker.mp4',
   help='The path to the source video')
+parser.add_argument('--youtube_id', default=False,
+  help='If specified, the youtube url will be downloaded as source.')
+parser.add_argument('--youtube_target', default='./data/source/',
+  help='Location to store the downloaded source video.')
 parser.add_argument('--middle_gap_pixel_size', default=10,
   help='The size of the gap between the left and right images.')
 parser.add_argument('--output_starting_ind', default=1,
@@ -23,12 +27,31 @@ parser.add_argument('--output_images', default=True,
   help='Output sequences of .jpeg files. If false, .mp4 videos will be generated.')
 args = parser.parse_args()
 
+args.youtube_id = 'XIeFKTbg3Aw'
+
 def rgb2gray(rgb):
   return np.dot(rgb[...,:3], [0.299, 0.587, 0.114])
 
+def download_youtube_video(youtube_id, target_path, create_subtitles=False):
+  target_filename = os.path.join(target_path, 'hitch_hiker')
+  command = 'youtube-dl %s -o %s' % (youtube_id, target_filename)
+  if subprocess.call(command, shell=True) == 0:
+    if create_subtitles: create_millisecond_subtitles(target_filename)
+  else:
+    return False
+  return True
+
 def main():
+  if args.youtube_id:
+    print 'Downloading video with youtube-dl...'
+    download_youtube_video(args.youtube_id, args.youtube_target)
+  else:
+    split_video()
+
+def split_video():
+
   movie_title = os.path.split(args.source_path)[-1]
-  offset_csv = os.path.join(args.target_folder, 'hitch_hiker_offsets.csv')
+  offset_csv = os.path.join(args.target_folder, 'offsets.csv')
   offsets = []
   video = VideoFileClip(args.source_path, audio=False)
   framerate = video.fps
