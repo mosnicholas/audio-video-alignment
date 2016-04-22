@@ -2,7 +2,7 @@ import argparse
 import os
 import random
 import csv
-#import caffe
+import caffe
 import lmdb
 import numpy as np
 from multiprocessing import Pool
@@ -94,7 +94,7 @@ def main():
 			start_index = 0
 
 		pool = Pool(8)
-		pool.map(lambda x: process_ind(x, train_images_writer, train_labels_writer, test_images_writer, test_labels_writer),  range(start_index, num_segments)):
+		pool.map(lambda x: process_ind(x, train_images_writer, train_labels_writer, test_images_writer, test_labels_writer), range(start_index, num_segments))
 	train_images_lmdb.close()
 	train_labels_lmdb.close()
 	test_images_lmdb.close()
