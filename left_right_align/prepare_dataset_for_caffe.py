@@ -2,7 +2,7 @@ import argparse
 import os
 import random
 import csv
-#import caffe
+import caffe
 import lmdb
 import numpy as np
 import multiprocessing
@@ -56,7 +56,7 @@ def parmap(f, X, nprocs = multiprocessing.cpu_count()):
 
     return [x for i,x in sorted(res)]
 
-def process_ind(segment_ind, train_images_writer, train_labels_writer, test_images_writer, test_labels_writer):
+def process_ind(segment_ind, train_images_writer, train_labels_writer, test_images_writer, test_labels_writer, in_train, offsets):
 		filename_base = 'seg-{:06d}'.format(segment_ind + 1)
 		path_filename_base = os.path.join(args.source_folder, filename_base)
 		sample_frame = np.array(imread(path_filename_base + '-frame-{:02d}'.format(0) + '-right.jpeg'))
@@ -117,7 +117,7 @@ def main():
 		else:
 			start_index = 0
 
-		parmap(lambda x: process_ind(x, train_images_writer, train_labels_writer, test_images_writer, test_labels_writer), range(start_index, num_segments))
+		parmap(lambda x: process_ind(x, train_images_writer, train_labels_writer, test_images_writer, test_labels_writer, in_train, offsets), range(start_index, num_segments))
 	train_images_lmdb.close()
 	train_labels_lmdb.close()
 	test_images_lmdb.close()
