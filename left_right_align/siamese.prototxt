@@ -64,11 +64,11 @@ layer {
   }
 }
 layer {
-  name: "slice_pair"
+  name: "slice"
   type: "Slice"
   bottom: "images"
-  top: "conv1"
-  top: "conv2"
+  top: "slice1"
+  top: "slice2"
   slice_param {
     slice_dim: 1
     slice_point: 10
@@ -77,7 +77,7 @@ layer {
 layer {
   name: "conv1"
   type: "Convolution"
-  bottom: "slice_pair" # N x 10 x 235 x 360
+  bottom: "slice1" # N x 10 x 235 x 360
   top: "conv1"
   param {
     name: "conv1_w"
@@ -224,7 +224,7 @@ layer {
 layer {
   name: "conv1_p"
   type: "Convolution"
-  bottom: "slice_pair"
+  bottom: "slice2"
   top: "conv1_p"
   param {
     name: "conv1_w"
