@@ -2,7 +2,7 @@
 net: "siamese.prototxt"
 # test_iter specifies how many forward passes the test should carry out.
 # Should be number of examples / test batch size
-test_iter: 100
+test_iter: 99
 # Carry out testing every 500 training iterations.
 test_interval: 500
 # The base learning rate, momentum and the weight decay of the network.

@@ -2,8 +2,7 @@ name: "siamese_data_layer"
 layer {
   name: "pair_data"
   type: "Data"
-  top: "pair_data"
-  top: "sim"
+  top: "images"
   include {
     phase: TRAIN
   }
@@ -11,15 +10,31 @@ layer {
     scale: 0.00390625
   }
   data_param {
-    source: "examples/siamese/mnist_siamese_train_leveldb"
+    source: "/mnt/data/dataset_prepared/left_right_images_train.lmdb"
+    backend: LMDB
     batch_size: 64
   }
 }
 layer {
   name: "pair_data"
   type: "Data"
-  top: "pair_data"
-  top: "sim"
+  top: "labels"
+  include {
+    phase: TRAIN
+  }
+  transform_param {
+    scale: 0.00390625
+  }
+  data_param {
+    source: "/mnt/data/dataset_prepared/left_right_labels_train.lmdb"
+    backend: LMDB
+    batch_size: 64
+  }
+}
+layer {
+  name: "pair_data"
+  type: "Data"
+  top: "images"
   include {
     phase: TEST
   }
@@ -27,25 +42,42 @@ layer {
     scale: 0.00390625
   }
   data_param {
-    source: "examples/siamese/mnist_siamese_test_leveldb"
-    batch_size: 100
+    source: "/mnt/data/dataset_prepared/left_right_images_train.lmdb"
+    backend: LMDB
+    batch_size: 64
+  }
+}
+layer {
+  name: "pair_data"
+  type: "Data"
+  top: "labels"
+  include {
+    phase: TEST
+  }
+  transform_param {
+    scale: 0.00390625
+  }
+  data_param {
+    source: "/mnt/data/dataset_prepared/left_right_labels_train.lmdb"
+    backend: LMDB
+    batch_size: 64
   }
 }
 layer {
   name: "slice_pair"
   type: "Slice"
-  bottom: "pair_data"
-  top: "data"
-  top: "data_p"
+  bottom: "images"
+  top: "data_1"
+  top: "data_2"
   slice_param {
     slice_dim: 1
-    slice_point: 1
+    slice_point: 10
   }
 }
 layer {
   name: "conv1"
   type: "Convolution"
-  bottom: "data"
+  bottom: "data_1" N x 10 x 235 x 360
   top: "conv1"
   param {
     name: "conv1_w"
@@ -56,9 +88,11 @@ layer {
     lr_mult: 2
   }
   convolution_param {
-    num_output: 20
-    kernel_size: 5
-    stride: 1
+    num_output: 32
+    kernel_size: 1
+    kernel_size: 7
+    kernel_size: 7
+    stride: 3 
     weight_filler {
       type: "xavier"
     }
@@ -70,18 +104,20 @@ layer {
 layer {
   name: "pool1"
   type: "Pooling"
-  bottom: "conv1"
+  bottom: "conv1" # N x 10 x 76 x 111
   top: "pool1"
   pooling_param {
     pool: MAX
-    kernel_size: 2
-    stride: 2
+    kernel_size: 1
+    kernel_size: 4
+    kernel_size: 4
+    stride: 4
   }
 }
 layer {
   name: "conv2"
   type: "Convolution"
-  bottom: "pool1"
+  bottom: "pool1" # N x 10 x 19 x 27
   top: "conv2"
   param {
     name: "conv2_w"
@@ -106,7 +142,7 @@ layer {
 layer {
   name: "pool2"
   type: "Pooling"
-  bottom: "conv2"
+  bottom: "conv2" # N x 6 x 15 x 23
   top: "pool2"
   pooling_param {
     pool: MAX
@@ -117,8 +153,8 @@ layer {
 layer {
   name: "ip1"
   type: "InnerProduct"
-  bottom: "pool2"
-  top: "ip1"
+  bottom: "pool2" # N x 3 x 7 x 11
+  top: "ip2"
   param {
     name: "ip1_w"
     lr_mult: 1
@@ -147,7 +183,7 @@ layer {
   name: "ip2"
   type: "InnerProduct"
   bottom: "ip1"
-  top: "ip2"
+  top: "feat"
   param {
     name: "ip2_w"
     lr_mult: 1
@@ -180,7 +216,7 @@ layer {
     lr_mult: 2
   }
   inner_product_param {
-    num_output: 2
+    num_output: 32
     weight_filler {
       type: "xavier"
     }
@@ -192,7 +228,7 @@ layer {
 layer {
   name: "conv1_p"
   type: "Convolution"
-  bottom: "data_p"
+  bottom: "data_2"
   top: "conv1_p"
   param {
     name: "conv1_w"
@@ -203,9 +239,11 @@ layer {
     lr_mult: 2
   }
   convolution_param {
-    num_output: 20
-    kernel_size: 5
-    stride: 1
+    num_output: 32
+    kernel_size: 1
+    kernel_size: 7
+    kernel_size: 7
+    stride: 3
     weight_filler {
       type: "xavier"
     }
@@ -221,8 +259,10 @@ layer {
   top: "pool1_p"
   pooling_param {
     pool: MAX
-    kernel_size: 2
-    stride: 2
+    kernel_size: 1
+    kernel_size: 4
+    kernel_size: 4
+    stride: 4
   }
 }
 layer {
@@ -265,7 +305,7 @@ layer {
   name: "ip1_p"
   type: "InnerProduct"
   bottom: "pool2_p"
-  top: "ip1_p"
+  top: "ip2_p"
   param {
     name: "ip1_w"
     lr_mult: 1
@@ -327,7 +367,7 @@ layer {
     lr_mult: 2
   }
   inner_product_param {
-    num_output: 2
+    num_output: 32
     weight_filler {
       type: "xavier"
     }
@@ -336,12 +376,30 @@ layer {
     }
   }
 }
+
 layer {
-  name: "loss"
-  type: "ContrastiveLoss"
+  name: "recombine"
+  type: "InnerProduct"
   bottom: "feat"
   bottom: "feat_p"
-  bottom: "sim"
+  top: "loss"
+  inner_product_param {
+    num_output: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+
+}
+
+layer {
+  name: "loss"
+  type: "SigmoidCrossEntropyLoss"
+  bottom: "recombine"
+  bottom: "label"
   top: "loss"
   contrastive_loss_param {
     margin: 1
