@@ -32,7 +32,7 @@ def read_offsets(filename):
 	return offsets
 
 def main():
-	offsets = read_offsets('hitch_hiker_offsets.csv')
+	offsets = read_offsets('offsets.csv')
 	num_segments = 1
 	while os.path.isfile(os.path.join(args.source_folder, 'seg-{:06d}-frame-00-left.jpeg'.format(num_segments))):
 		num_segments += 1
