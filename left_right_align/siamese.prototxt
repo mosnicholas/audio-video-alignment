@@ -77,7 +77,7 @@ layer {
 layer {
   name: "conv1"
   type: "Convolution"
-  bottom: "data_1" N x 10 x 235 x 360
+  bottom: "data_1" # N x 10 x 235 x 360
   top: "conv1"
   param {
     name: "conv1_w"
