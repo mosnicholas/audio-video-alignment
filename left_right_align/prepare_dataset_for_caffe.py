@@ -90,8 +90,8 @@ def main():
 	if (args.resume_from):
 		with open(test_inds_csv_path, 'rb') as test_inds_csv:
 			test_inds_reader = csv.reader(test_inds_csv, delimiter=',')
-		for row in test_inds_reader:
-			test_inds.append(row[0])
+			for row in test_inds_reader:
+				test_inds.append(row[0])
 	else:
 		test_inds = random.sample(segment_inds, 1000)
 		with open(test_inds_csv_path, 'w') as test_inds_csv:
