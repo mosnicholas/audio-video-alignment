@@ -16,6 +16,8 @@ parser.add_argument('--target_folder', default='./data/dataset_prepared',
   help='The parent directory for the dataset.')
 parser.add_argument('--source_folder', default='./data/dataset/',
   help='The path to the source video')
+parser.add_argument('--resume_from', default=False,
+	help='The segment to resume processing from.')
 args = parser.parse_args()
 
 def rgb2gray(rgb):
@@ -39,7 +41,20 @@ def main():
 		os.mkdir(args.target_folder)
 
 	segment_inds = range(num_segments)
-	test_inds = random.sample(segment_inds, 1000)
+
+	test_inds_csv_path = os.path.join(args.target_folder, 'test_inds.csv')
+	if (args.resume_from):
+		with open(test_inds_csv_path, 'rb') as test_inds_csv:
+			test_inds_reader = csv.reader(test_inds_csv, delimiter=',')
+		for row in test_inds_reader:
+			test_inds.append(row[0])
+	else:
+		test_inds = random.sample(segment_inds, 1000)
+		with open(test_inds_csv_path, 'w') as test_inds_csv:
+	    w = csv.DictWriter(test_inds_csv, fieldnames=['test_ind'])
+	    w.writeheader()
+	    w.writerows(test_inds)
+
 	in_train = np.array([True] * num_segments)
 	in_train[test_inds] = False
 
@@ -53,7 +68,12 @@ def main():
 		test_images_lmdb.begin(write=True) as test_images_writer, \
 		test_labels_lmdb.begin(write=True) as test_labels_writer:
 
-		for segment_ind in segment_inds:
+		if args.resume_from:
+			start_index = args.resume_from
+		else:
+			start_index = 0
+
+		for segment_ind in range(start_index, num_segments):
 			filename_base = 'seg-{:06d}'.format(segment_ind + 1)
 			path_filename_base = os.path.join(args.source_folder, filename_base)
 			sample_frame = np.array(imread(path_filename_base + '-frame-{:02d}'.format(0) + '-right.jpeg'))
