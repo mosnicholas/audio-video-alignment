@@ -1,11 +1,13 @@
 
 import os
 import csv
+import lmdb
+# import caffe
 import shutil
 import argparse
 import subprocess
 import numpy as np
-from random import randint
+from scipy.ndimage import imread
 from moviepy.editor import VideoFileClip, AudioFileClip
 
 TRUMP_ID = 'RDrfE9I8_hs'
@@ -27,9 +29,9 @@ parser.add_argument('--video_source', default=movie_path,
   help='The path to the source video')
 parser.add_argument('--target_folder', default=outfolder,
   help='The parent directory for the dataset.')
-parser.add_argument('--resume_from_dataset', default=False,
+parser.add_argument('--resume_from_dataset', action='store_true',
   help='The segment to resume creating the dataset from.')
-parser.add_argument('--resume_from_lmdb', default=False,
+parser.add_argument('--resume_from_lmdb', action='store_true',
   help='The segment to resume loading into lmdb from.')
 args = parser.parse_args()
 
@@ -87,44 +89,90 @@ def create_trump_dataset(movie_path, target_folder):
 def create_movie_dataset(movie_path, target_folder):
   if not os.path.isdir(target_folder): os.makedirs(target_folder)
   video = VideoFileClip(movie_path)
-  outcsv = os.path.join(target_folder, 'offsets.csv')
-  offsets = []
-  fps = video.fps
-  first_frame = int(23 * fps) + 1
+  num_frames = int(video.fps * video.duration)
+  video = video.set_fps(1).set_duration(num_frames)
+  offset_file = os.path.join(target_folder, 'offsets.npz')
+  resume_tracker = os.path.join(target_folder, 'last_seen.txt')
+  first_frame = 24
+
+  num_frames = num_frames - 10
 
   if args.resume_from_dataset:
-    with open(outcsv, 'r') as csvfile:
-      reader = csv.reader(csvfile)
-      last_seen = 0
-      for line in reader:
-        last_seen = int(line[0])
-        # We should remove files larger than this one to prevent errors with overlap.
-    first_frame += last_seen
+    first_frame += int(np.loadtxt(resume_tracker)) # We should remove files larger than this one to prevent errors with overlap.
+  else:
+    offsets = np.random.randint(2, 10, num_frames)
+    np.savez_compressed(offset_file, offsets=offsets)
 
-  for i in xrange(first_frame, int(video.duration * fps) - 10):
+  for i in xrange(first_frame, num_frames):
     shifted = i - first_frame
-    video_title = 'seg-%06d-frame-%%02d-%s.jpg'
-    video_a = os.path.join(target_folder, video_title % (shifted, 'left'))
-    video_b = os.path.join(target_folder, video_title % (shifted, 'right'))
-    index_a = randint(4, 8)
-    index_b = randint(4, index_a)
-    offsets.append({'id': shifted, 'offset': index_b + 1})
-    video.subclip(i/fps, (i + index_a + 2)/fps).write_images_sequence(video_a)
-    video.subclip((i + index_b)/fps, (i + 10)/fps).write_images_sequence(video_b)
+    video_title = 'seg-%06d-frame-%%02d.jpg'
+    video_path = os.path.join(target_folder, video_title % shifted)
+    video.subclip(i, i + 10).write_images_sequence(video_path)
+    if i % 500 == 0: np.savetxt(resume_tracker, np.ones((1)) * i)
 
-    if i % 500 == 0:
-      print 'saving up to %d offset to csv' % i
-      with open(outcsv, 'aw') as csvfile:
-        w = csv.DictWriter(csvfile, fieldnames=offsets[0].keys())
-        w.writerows(offsets)
-      offsets = []
-
-  if offsets:
-    with open(outcsv, 'aw') as csvfile:
-      w = csv.DictWriter(csvfile, fieldnames=offsets[0].keys())
-      w.writerows(offsets)
+  if i == num_frames: os.remove(resume_tracker)
 
   return True
+
+def load_data_into_lmdb(data_source_folder, target_folder):
+  offset_file_path = os.path.join(data_source_folder, 'offsets.npz')
+  if not os.path.isdir(target_folder): os.makedirs(target_folder)
+  train_test_file = os.path.join(target_folder, 'train_test_indices.npz')
+
+  offsets = np.load(offset_file_path)['offsets']
+  num_splits = len(offsets)
+
+  if args.resume_from_lmdb:
+    train = np.load(train_test_file)['train']
+  else:
+    train = np.ones((num_splits), dtype=bool)
+    train[np.random.randint(0, num_splits, 1000)] = False
+    np.savez_compressed(train_test_file, train=train)
+
+  frames_train = lmdb.open(os.path.join(target_folder, 'frames_train'), map_size=int(1e12))
+  labels_train = lmdb.open(os.path.join(target_folder, 'labels_train'), map_size=int(1e12))
+  frames_test = lmdb.open(os.path.join(target_folder, 'frames_test'), map_size=int(1e12))
+  labels_test = lmdb.open(os.path.join(target_folder, 'labels_test'), map_size=int(1e12))
+
+  video_title = 'seg-%06d-frame-%%02d.jpg'
+  frame_paths = os.path.join(data_source_folder, video_title)
+  frame_shape = imread((frame_paths % 1) % 1).shape
+  black_arr = np.zeros((frame_shape[0], frame_shape[1]))
+
+  with frames_train.begin(write=True) as frames_train_writer, \
+      labels_train.begin(write=True) as labels_train_writer, \
+      frames_test.begin(write=True) as frames_test_writer, \
+      labels_test.begin(write=True) as labels_test_writer:
+
+    for split in xrange(num_splits):
+      stacked = np.zeros((frame_shape[0], frame_shape[1], 20))
+      db_title = 'seg-%06d' % split
+      frames = frame_paths % split
+      
+      split_ind = offsets[split]
+
+      for i in xrange(1, 11):
+        stacked[:, :, i - 1] = greyscale(imread(frames % i))
+        if i <= split_ind:
+          stacked[:, :, 10 + i - 1] = black_arr
+        else:
+          stacked[:, :, 10 + i - 1] = stacked[:, :, i - 1]
+      stacked_data = caffe.io.array_to_datum(stacked)
+
+      if in_train[split]:
+        frames_train_writer.put(db_title, stacked_data.SerializeToString())
+        labels_train_writer.put(db_title, split_ind)
+      else:
+        frames_test_writer.put(db_title, stacked_data.SerializeToString())
+        labels_test_writer.put(db_title, split_ind)
+
+      if split % 500 == 0:
+        print str(split) + ' segments processed...'
+
+    train_images_lmdb.close()
+    train_labels_lmdb.close()
+    test_images_lmdb.close()
+    test_labels_lmdb.close()
 
 def download_trump():
   return download_raw_youtube_video(TRUMP_ID, args.download_target_folder, 'china.mp4', True)
@@ -135,3 +183,4 @@ def download_movie():
 if __name__ == '__main__':
   # Pipeline: Download movie -> create dataset -> load into lmdb
   create_movie_dataset(args.video_source, args.target_folder)
+  # load_data_into_lmdb(args.target_folder, args.target_folder)
