@@ -2,10 +2,10 @@ import argparse
 import os
 import random
 import csv
-import caffe
+#import caffe
 import lmdb
 import numpy as np
-from multiprocessing import Pool
+import multiprocessing
 from scipy.ndimage import imread
 
 parser = argparse.ArgumentParser(
@@ -31,6 +31,30 @@ def read_offsets(filename):
 		for row in offsets_reader:
 			offsets.append(row[1])
 	return offsets
+
+def fun(f,q_in,q_out):
+    while True:
+        i,x = q_in.get()
+        if i is None:
+            break
+        q_out.put((i,f(x)))
+
+def parmap(f, X, nprocs = multiprocessing.cpu_count()):
+    q_in   = multiprocessing.Queue(1)
+    q_out  = multiprocessing.Queue()
+
+    proc = [multiprocessing.Process(target=fun,args=(f,q_in,q_out)) for _ in range(nprocs)]
+    for p in proc:
+        p.daemon = True
+        p.start()
+
+    sent = [q_in.put((i,x)) for i,x in enumerate(X)]
+    [q_in.put((None,None)) for _ in range(nprocs)]
+    res = [q_out.get() for _ in range(len(sent))]
+
+    [p.join() for p in proc]
+
+    return [x for i,x in sorted(res)]
 
 def process_ind(segment_ind, train_images_writer, train_labels_writer, test_images_writer, test_labels_writer):
 		filename_base = 'seg-{:06d}'.format(segment_ind + 1)
@@ -93,8 +117,7 @@ def main():
 		else:
 			start_index = 0
 
-		pool = Pool(8)
-		pool.map(lambda x: process_ind(x, train_images_writer, train_labels_writer, test_images_writer, test_labels_writer), range(start_index, num_segments))
+		parmap(lambda x: process_ind(x, train_images_writer, train_labels_writer, test_images_writer, test_labels_writer), range(start_index, num_segments))
 	train_images_lmdb.close()
 	train_labels_lmdb.close()
 	test_images_lmdb.close()
