@@ -112,7 +112,7 @@ def main():
 		test_labels_lmdb.begin(write=True) as test_labels_writer:
 
 		if args.resume_from:
-			start_index = args.resume_from
+			start_index = int(args.resume_from)
 		else:
 			start_index = 0
 
