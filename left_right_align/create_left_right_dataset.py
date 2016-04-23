@@ -118,6 +118,7 @@ def split_video():
       offsets.append({ 'id': '{:06d}'.format(output_ind), 'offset_frames': offset })
     if (ind % 1000 == 0):
       print('Finished processing {:d} datapoints.'.format(output_ind))
+  os.remove(offset_csv)
   with open(offset_csv, 'w') as offset_csv_file:
     w = csv.DictWriter(offset_csv_file, fieldnames=['id', 'offset_frames'])
     w.writeheader()
