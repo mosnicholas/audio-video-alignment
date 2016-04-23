@@ -116,6 +116,7 @@ def split_video():
           right_video_out = ImageSequenceClip(offset_frames, fps=framerate)
           right_video_out.write_videofile(os.path.join(args.target_folder, 'seg-{:06d}-right.mp4' % output_ind), codec='libx264', audio=False)
       offsets.append({ 'id': '{:06d}'.format(output_ind), 'offset_frames': offset })
+      output_ind += 1
     if (ind % 1000 == 0):
       print('Finished processing {:d} datapoints.'.format(output_ind))
   os.remove(offset_csv)
