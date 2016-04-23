@@ -56,7 +56,7 @@ def parmap(f, X, nprocs = multiprocessing.cpu_count()):
 
     return [x for i,x in sorted(res)]
 
-def process_ind(segment_ind, train_images_writer, train_labels_writer, test_images_writer, test_labels_writer, in_train, offsets):
+def process_ind(segment_ind, train_images_txn, train_labels_txn, test_images_txn, test_labels_txn, in_train, offsets):
 		filename_base = 'seg-{:06d}'.format(segment_ind + 1)
 		path_filename_base = os.path.join(args.source_folder, filename_base)
 		sample_frame = np.array(imread(path_filename_base + '-frame-{:02d}'.format(0) + '-right.jpeg'))
@@ -67,13 +67,51 @@ def process_ind(segment_ind, train_images_writer, train_labels_writer, test_imag
 			stacked[:, :, 10 + frame_ind] = imread(path_filename_base + '-frame-{:02d}'.format(frame_ind) + '-left.jpeg')
 		stacked_data = caffe.io.array_to_datum(stacked)
 		if in_train[segment_ind]:
-			train_images_writer.put(filename_base, stacked_data.SerializeToString())
-			train_labels_writer.put(filename_base, offsets[segment_ind])
+			train_images_txn.put(filename_base, stacked_data.SerializeToString())
+			train_labels_txn.put(filename_base, offsets[segment_ind])
 		else:
-			test_images_writer.put(filename_base, stacked_data.SerializeToString())
-			test_labels_writer.put(filename_base, offsets[segment_ind])
+			test_images_txn.put(filename_base, stacked_data.SerializeToString())
+			test_labels_txn.put(filename_base, offsets[segment_ind])
 		if segment_ind % 50 == 0:
 			print str(segment_ind) + ' segments processed...'
+
+def process_inds(segment_inds, process_ind, in_train, offsets):
+
+	train_images_lmdb = lmdb.open(os.path.join(args.target_folder, 'left_right_images_train_{:02d}'.format(process_ind)), map_size=int(1e12))
+	train_labels_lmdb = lmdb.open(os.path.join(args.target_folder, 'left_right_labels_train_{:02d}'.format(process_ind)), map_size=int(1e12))
+	test_images_lmdb = lmdb.open(os.path.join(args.target_folder, 'left_right_images_test_{:02d}'.format(process_ind)), map_size=int(1e12))
+	test_labels_lmdb = lmdb.open(os.path.join(args.target_folder, 'left_right_labels_test_{:02d}'.format(process_ind)), map_size=int(1e12))
+
+	with train_images_lmdb.begin(write=True) as train_images_txn, \
+		train_labels_lmdb.begin(write=True) as train_labels_txn, \
+		test_images_lmdb.begin(write=True) as test_images_txn, \
+		test_labels_lmdb.begin(write=True) as test_labels_txn:
+
+		for segment_ind in segment_inds:
+			filename_base = 'seg-{:06d}'.format(segment_ind + 1)
+			path_filename_base = os.path.join(args.source_folder, filename_base)
+			sample_frame = np.array(imread(path_filename_base + '-frame-{:02d}'.format(0) + '-right.jpeg'))
+			stacked = np.zeros((np.size(sample_frame, 0), np.size(sample_frame, 1), 20))
+			right_frames = []
+			for frame_ind in range(0, 10):
+				stacked[:, :, frame_ind] = imread(path_filename_base + '-frame-{:02d}'.format(frame_ind) + '-right.jpeg')
+				stacked[:, :, 10 + frame_ind] = imread(path_filename_base + '-frame-{:02d}'.format(frame_ind) + '-left.jpeg')
+			stacked_data = caffe.io.array_to_datum(stacked)
+			if in_train[segment_ind]:
+				train_images_txn.put(filename_base, stacked_data.SerializeToString())
+				train_labels_txn.put(filename_base, offsets[segment_ind])
+			else:
+				test_images_txn.put(filename_base, stacked_data.SerializeToString())
+				test_labels_txn.put(filename_base, offsets[segment_ind])
+			if segment_ind % 50 == 0:
+				print str(segment_ind) + ' segments processed...'
+				print train_image_lmdb.stat()
+				print train_label_lmdb.stat()
+
+	train_images_lmdb.close()
+	train_labels_lmdb.close()
+	test_images_lmdb.close()
+	test_labels_lmdb.close()
 
 def main():
 	offsets = read_offsets('offsets.csv')
@@ -94,32 +132,24 @@ def main():
 	else:
 		test_inds = random.sample(segment_inds, 1000)
 		with open(test_inds_csv_path, 'w') as test_inds_csv:
-			w = csv.writer(test_inds_csv)
+			w = csv.txn(test_inds_csv)
 			test_inds_to_write = [[ind] for ind in test_inds]
-			w.writerows(test_inds_to_write)
+			w.txnows(test_inds_to_write)
 
 	in_train = np.array([True] * num_segments)
 	in_train[test_inds] = False
 
-	train_images_lmdb = lmdb.open(os.path.join(args.target_folder, 'left_right_images_train'), map_size=int(1e12))
-	train_labels_lmdb = lmdb.open(os.path.join(args.target_folder, 'left_right_labels_train'), map_size=int(1e12))
-	test_images_lmdb = lmdb.open(os.path.join(args.target_folder, 'left_right_images_test'), map_size=int(1e12))
-	test_labels_lmdb = lmdb.open(os.path.join(args.target_folder, 'left_right_labels_test'), map_size=int(1e12))
+	if args.resume_from:
+		offsets = offsets[resume_from:]
 
-	with train_images_lmdb.begin(write=True) as train_images_writer, \
-		train_labels_lmdb.begin(write=True) as train_labels_writer, \
-		test_images_lmdb.begin(write=True) as test_images_writer, \
-		test_labels_lmdb.begin(write=True) as test_labels_writer:
+	num_processes = multiprocessing.cpu_count()
+	offsets_per_process = len(offsets) / num_processes
 
-		if args.resume_from:
-			start_index = int(args.resume_from)
-		else:
-			start_index = 0
+	for process_ind in range(num_processes):
+			start_segment_ind = process_ind * offsets_per_process
+			end_segment_ind = len(offsets) if process_ind == num_processes else (process_ind + 1) * offsets_per_process
+			proc_segment_inds = segment_inds[start_segment_ind:end_segment_ind]
 
-		parmap(lambda x: process_ind(x, train_images_writer, train_labels_writer, test_images_writer, test_labels_writer, in_train, offsets), range(start_index, num_segments))
-	train_images_lmdb.close()
-	train_labels_lmdb.close()
-	test_images_lmdb.close()
-	test_labels_lmdb.close()
-	
+			parmap(lambda inds: process_inds(inds, process_ind, train_images_txn, train_labels_txn, test_images_txn, test_labels_txn, in_train, offsets), proc_segment_inds)
+
 main()
