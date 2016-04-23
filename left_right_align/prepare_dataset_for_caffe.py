@@ -132,9 +132,9 @@ def main():
 	else:
 		test_inds = random.sample(segment_inds, 1000)
 		with open(test_inds_csv_path, 'w') as test_inds_csv:
-			w = csv.txn(test_inds_csv)
+			w = csv.writer(test_inds_csv)
 			test_inds_to_write = [[ind] for ind in test_inds]
-			w.txnows(test_inds_to_write)
+			w.writerows(test_inds_to_write)
 
 	in_train = np.array([True] * num_segments)
 	in_train[test_inds] = False
