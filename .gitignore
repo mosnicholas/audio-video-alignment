@@ -10,4 +10,8 @@
 *.pem
 *.jpg
 *.npz
+frames_train*/
+frames_test*/
+labels_train*/
+labels_test*/
 

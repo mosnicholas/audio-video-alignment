@@ -133,7 +133,7 @@ def create_movie_dataset(movie_path, target_folder):
 
   return True
 
-def load_single_datum_into_lmdb(frames_train_path, labels_train_path, frames_test_path, labels_test_path, shape, offsets, train_values, frame_paths, offset_start, offset_end):
+def load_single_datum_into_lmdb(frames_train_path, labels_train_path, frames_test_path, labels_test_path, shape, offsets, train_values, frame_paths, offset_start, offset_end, pnum):
   stacked = np.zeros((shape[0], shape[1], 20))
 
   frames_train = lmdb.open(frames_train_path, map_size=int(1e12))
@@ -141,10 +141,10 @@ def load_single_datum_into_lmdb(frames_train_path, labels_train_path, frames_tes
   frames_test = lmdb.open(frames_test_path, map_size=int(1e12))
   labels_test = lmdb.open(labels_test_path, map_size=int(1e12))
 
-  with frames_train.begin(write=True) as frames_train_writer, \
-    labels_train.begin(write=True) as labels_train_writer, \
-    frames_test.begin(write=True) as frames_test_writer, \
-    labels_test.begin(write=True) as labels_test_writer:
+  with frames_train.begin(write=True, buffers=True) as frames_train_writer, \
+    labels_train.begin(write=True, buffers=True) as labels_train_writer, \
+    frames_test.begin(write=True, buffers=True) as frames_test_writer, \
+    labels_test.begin(write=True, buffers=True) as labels_test_writer:
 
     for split in xrange(offset_start, offset_end):
       shifted = split - offset_start
@@ -162,8 +162,8 @@ def load_single_datum_into_lmdb(frames_train_path, labels_train_path, frames_tes
         frames_test_writer.put(db_entry_title, stacked_data.SerializeToString())
         labels_test_writer.put(db_entry_title, str(offsets[shifted]))
 
-      if split % 500 == 0:
-        print '%s splits processed' % split
+      if shifted % 500 == 0:
+        print '%s splits processed on process %d' % (shifted, pnum)
 
   frames_train.close()
   labels_train.close()
@@ -192,7 +192,6 @@ def load_data_into_lmdb(data_source_folder, target_folder):
 
   num_cpus = multiprocessing.cpu_count()
 
-  process_data = []
   indices_per_cpu = num_splits / num_cpus
   for i in xrange(num_cpus):
     offset_start = i * indices_per_cpu
@@ -203,7 +202,7 @@ def load_data_into_lmdb(data_source_folder, target_folder):
       os.path.join(target_folder, 'frames_test_%d' % i),
       os.path.join(target_folder, 'labels_test_%d' % i),
       frame_shape, offsets[offset_start:offset_end], train[offset_start:offset_end],
-      frame_paths, offset_start, offset_end
+      frame_paths, offset_start, offset_end, i
     )).start()
 
 def download_trump():
