@@ -75,7 +75,7 @@ def process_ind(segment_ind, train_images_txn, train_labels_txn, test_images_txn
 		if segment_ind % 50 == 0:
 			print str(segment_ind) + ' segments processed...'
 
-def process_inds(segment_inds, process_ind, in_train, offsets):
+def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 
 	train_images_lmdb = lmdb.open(os.path.join(args.target_folder, 'left_right_images_train_{:02d}'.format(process_ind)), map_size=int(1e12))
 	train_labels_lmdb = lmdb.open(os.path.join(args.target_folder, 'left_right_labels_train_{:02d}'.format(process_ind)), map_size=int(1e12))
@@ -87,7 +87,7 @@ def process_inds(segment_inds, process_ind, in_train, offsets):
 		test_images_lmdb.begin(write=True) as test_images_txn, \
 		test_labels_lmdb.begin(write=True) as test_labels_txn:
 
-		for segment_ind in segment_inds:
+		for segment_ind in range(seg_start_ind, seg_end_ind):
 			filename_base = 'seg-{:06d}'.format(segment_ind + 1)
 			path_filename_base = os.path.join(args.source_folder, filename_base)
 			sample_frame = np.array(imread(path_filename_base + '-frame-{:02d}'.format(0) + '-right.jpeg'))
@@ -145,11 +145,12 @@ def main():
 	num_processes = multiprocessing.cpu_count()
 	offsets_per_process = len(offsets) / num_processes
 
+	start_end_inds = []
 	for process_ind in range(num_processes):
 			start_segment_ind = process_ind * offsets_per_process
 			end_segment_ind = len(offsets) if process_ind == num_processes else (process_ind + 1) * offsets_per_process
-			proc_segment_inds = segment_inds[start_segment_ind:end_segment_ind]
+			start_end_inds.append((start_segment_ind, end_segment_ind))
 
-			parmap(lambda inds: process_inds(inds, process_ind, train_images_txn, train_labels_txn, test_images_txn, test_labels_txn, in_train, offsets), proc_segment_inds)
+	parmap(lambda start_end_ind: process_inds(start_end_ind[0], start_end_ind[1], process_ind, in_train, offsets), start_end_inds)
 
 main()
