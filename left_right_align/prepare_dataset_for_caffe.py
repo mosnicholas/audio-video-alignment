@@ -105,8 +105,8 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 				test_labels_txn.put(filename_base, offsets[segment_ind])
 			if segment_ind % 50 == 0:
 				print str(segment_ind) + ' segments processed...'
-				print train_image_lmdb.stat()
-				print train_label_lmdb.stat()
+				print train_images_lmdb.stat()
+				print train_labels_lmdb.stat()
 
 	train_images_lmdb.close()
 	train_labels_lmdb.close()
