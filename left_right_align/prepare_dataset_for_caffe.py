@@ -103,8 +103,16 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 			else:
 				test_images_txn.put(filename_base, stacked_data.SerializeToString())
 				test_labels_txn.put(filename_base, offsets[segment_ind])
-			if segment_ind % 50 == 0:
+			if segment_ind % 100 == 0:
 				print str(segment_ind) + ' segments processed...'
+				train_images_txn.commit()
+				train_labels_txn.commit()
+				test_images_txn.commit()
+				test_labels_txn.commit()
+				train_images_txn = train_images_lmdb.begin(write=True)
+				train_labels_txn = train_labels_lmdb.begin(write=True)
+				test_images_txn = test_images_lmdb.begin(write=True)
+				test_labels_txn = test_labels_lmdb.begin(write=True)
 				print train_images_lmdb.stat()
 				print train_labels_lmdb.stat()
 
