@@ -27,7 +27,7 @@ parser.add_argument('--output_images', default=True,
   help='Output sequences of .jpeg files. If false, .mp4 videos will be generated.')
 args = parser.parse_args()
 
-args.youtube_id = 'XIeFKTbg3Aw'
+#args.youtube_id = 'XIeFKTbg3Aw'
 
 def rgb2gray(rgb):
   return np.dot(rgb[...,:3], [0.299, 0.587, 0.114])
@@ -84,7 +84,7 @@ def split_video():
       if args.output_images:
         assert len(left_frames) == 10, 'Only added ' + str(left_frames) + ' left frames on segment ' + str(output_ind) + '. Should have 10.'
         assert len(right_frames) == 10, 'Only added ' + str(right_frames) + ' right frames on segment ' + str(output_ind) + '. Should have 10.'
-        assert len(offset_frames) == 10, 'Only added ' + str(offset_frames) + ' offset frames on segment ' + str(output_ind) + '. Should have 10.'
+        assert len(offset_frames) == 10, 'Only added ' + str(offset_frames) + ' offset frames on segment ' + str(output_ind) +s '. Should have 10.'
         for frame_ind, left_frame in enumerate(left_frames):
           misc.toimage(left_frame, cmin=np.min(left_frame), cmax=np.max(left_frame)).save(os.path.join(args.target_folder, ('seg-{:06d}-frame-{:02d}-left.jpeg').format(output_ind, frame_ind)))
         for frame_ind, right_frame in enumerate(right_frames):
