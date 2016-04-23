@@ -68,7 +68,7 @@ def split_video():
       left_frames = []
       right_frames = []
       offset_frames = []
-      first_start = randint(0, 9) + ind
+      first_start = ind
       offset = randint(1,10)
       second_start = first_start + offset
       offset_left = randint(0, 1) == 1
