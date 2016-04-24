@@ -135,6 +135,7 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 
 def main():
 	offsets = read_offsets('offsets.csv')
+	args.num_to_process = int(args.num_to_process)
 	num_segments = 1
 	while os.path.isfile(os.path.join(args.source_folder, 'seg-{:06d}-frame-00-left.jpeg'.format(num_segments))):
 		num_segments += 1
@@ -163,7 +164,7 @@ def main():
 
 	if args.resume_from:
 		offsets = offsets[args.resume_from:]
-	else if args.num_to_process:
+	elif args.num_to_process:
 		offsets[:args.num_to_process]
 
 	process_inds(0, len(offsets), 0, in_train, offsets)
