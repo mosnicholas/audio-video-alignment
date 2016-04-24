@@ -128,7 +128,8 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 
 def main():
 	offsets = read_offsets('offsets.csv')
-	offsets = float(offsets)/float(max(offsets))
+	max_offset = max(offsets)
+	offsets = map(lambda offset: float(offset) / max_offset, offsets)
 	num_segments = 1
 	while os.path.isfile(os.path.join(args.source_folder, 'seg-{:06d}-frame-00-left.jpeg'.format(num_segments))):
 		num_segments += 1
