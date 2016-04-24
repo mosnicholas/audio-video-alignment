@@ -32,7 +32,9 @@ def read_offsets(filename):
 		offsets_reader = csv.reader(offsets_file, delimiter=',')
 		for row in offsets_reader:
 			offsets.append(row[1])
-	return offsets
+	offsets = offsets[1:]
+	max_offset = max(offsets)
+	return map(lambda offset: float(offset) / max_offset, offsets)
 
 def fun(f,q_in,q_out):
     while True:
@@ -128,8 +130,6 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 
 def main():
 	offsets = read_offsets('offsets.csv')
-	max_offset = max(offsets)
-	offsets = map(lambda offset: float(offset) / max_offset, offsets)
 	num_segments = 1
 	while os.path.isfile(os.path.join(args.source_folder, 'seg-{:06d}-frame-00-left.jpeg'.format(num_segments))):
 		num_segments += 1
