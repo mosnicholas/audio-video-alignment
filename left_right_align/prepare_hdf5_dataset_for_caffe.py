@@ -98,8 +98,8 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 		image_filename = 'seg-{:06d}-image.h5'.format(segment_ind + 1)
 		#label_filename = 'seg-{:06d}-label.h5'.format(segment_ind + 1)
 		path_filename_base = os.path.join(args.source_folder, image_filename)
-		stacked_left = np.zeros((np.size(sample_frame, 0), np.size(sample_frame, 1), 10))
-		stacked_right = np.zeros((np.size(sample_frame, 0), np.size(sample_frame, 1), 10))
+		stacked_left = np.zeros((1, np.size(sample_frame, 0), np.size(sample_frame, 1), 10))
+		stacked_right = np.zeros((1, np.size(sample_frame, 0), np.size(sample_frame, 1), 10))
 		for frame_ind in range(0, 10):
 			stacked_left[:, :, frame_ind] = imread(os.path.join(args.source_folder, 'seg-{:06d}-frame-{:02d}-right.jpeg'.format(segment_ind + 1, frame_ind)))
 			stacked_right[:, :, frame_ind] = imread(os.path.join(args.source_folder, 'seg-{:06d}-frame-{:02d}-left.jpeg'.format(segment_ind + 1, frame_ind)))
@@ -107,8 +107,8 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 		full_file_path = os.path.join(args.target_folder, image_filename)
 		if in_train[segment_ind]:
 			with h5py.File(full_file_path, 'w') as f:
-				f['left'] = np.transpose(stacked_left, (2, 1, 0))
-				f['right'] = np.transpose(stacked_right, (2, 1, 0))
+				f['left'] = np.transpose(stacked_left, (3, 2, 1, 0))
+				f['right'] = np.transpose(stacked_right, (3, 2, 1, 0))
 				label_mat = np.zeros((1, 1))
 				label_mat[0, 0] = offsets[segment_ind]
 				f['label'] = label_mat
@@ -118,8 +118,8 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 			filenames_train.append(full_file_path)
 		else:
 			with h5py.File(full_file_path, 'w') as f:
-				f['left'] = np.transpose(stacked_left, (2, 1, 0))
-				f['right'] = np.transpose(stacked_right, (2, 1, 0))
+				f['left'] = np.transpose(stacked_left, (3, 2, 1, 0))
+				f['right'] = np.transpose(stacked_right, (3, 2, 1, 0))
 				label_mat = np.zeros((1, 1))
 				label_mat[0, 0] = offsets[segment_ind]
 				f['label'] = label_mat
