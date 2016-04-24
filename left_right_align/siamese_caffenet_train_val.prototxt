@@ -3,7 +3,7 @@ name: "siamese_caffenet_train_val"
 # Improvements to try: xavier
 layer {
   name: "pair_data"
-  type: "Data"
+  type: "HDF5Data"
   top: "image1"
   top: "image2"
   top: "label"
@@ -15,13 +15,12 @@ layer {
   }
   data_param {
     source: "/mnt/data/dataset_prepared/examples_train.txt"
-    backend: HDF5
     batch_size: 64
   }
 }
 layer {
   name: "pair_data"
-  type: "Data"
+  type: "HDF5Data"
   top: "image1"
   top: "image2"
   top: "label"
@@ -33,7 +32,6 @@ layer {
   }
   data_param {
     source: "/mnt/data/dataset_prepared/examples_test.txt"
-    backend: HDF5
     batch_size: 64
   }
 }
