@@ -116,13 +116,13 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 		if segment_ind % 100 == 0 or segment_ind == seg_end_ind - 1:
 			print str(segment_ind) + ' segments processed...'
 			with open(filenames_train_path, 'w') as f:
-	    	for filename_train in filenames_train:
-	        f.write(filename_train + '\n')
-      with open(filenames_test_path, 'w') as f:
-	    	for filename_test in filenames_test:
-	        f.write(filename_test + '\n')
-	    filenames_train = []
-	    filenames_test = []
+			for filename_train in filenames_train:
+				f.write(filename_train + '\n')
+			with open(filenames_test_path, 'w') as f:
+				for filename_test in filenames_test:
+					f.write(filename_test + '\n')
+			filenames_train = []
+			filenames_test = []
 
 
 
