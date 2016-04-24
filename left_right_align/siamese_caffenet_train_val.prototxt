@@ -623,7 +623,7 @@ layer {
   name: "loss"
   type: "SigmoidCrossEntropyLoss"
   bottom: "fc8"
-  bottom: "labels"
+  bottom: "label"
   top: "loss"
   contrastive_loss_param {
     margin: 1
