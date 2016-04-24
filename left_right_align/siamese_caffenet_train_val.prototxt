@@ -10,9 +10,6 @@ layer {
   include {
     phase: TRAIN
   }
-  transform_param {
-    scale: 0.00390625
-  }
   data_param {
     source: "/mnt/data/dataset_prepared/examples_train.txt"
     batch_size: 64
@@ -26,9 +23,6 @@ layer {
   top: "label"
   include {
     phase: TEST
-  }
-  transform_param {
-    scale: 0.00390625
   }
   data_param {
     source: "/mnt/data/dataset_prepared/examples_test.txt"
