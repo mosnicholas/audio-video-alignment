@@ -101,8 +101,8 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 		stacked_left = np.zeros((1, np.size(sample_frame, 0), np.size(sample_frame, 1), 10))
 		stacked_right = np.zeros((1, np.size(sample_frame, 0), np.size(sample_frame, 1), 10))
 		for frame_ind in range(0, 10):
-			stacked_left[:, :, frame_ind] = imread(os.path.join(args.source_folder, 'seg-{:06d}-frame-{:02d}-right.jpeg'.format(segment_ind + 1, frame_ind)))
-			stacked_right[:, :, frame_ind] = imread(os.path.join(args.source_folder, 'seg-{:06d}-frame-{:02d}-left.jpeg'.format(segment_ind + 1, frame_ind)))
+			stacked_left[:, :, :, frame_ind] = imread(os.path.join(args.source_folder, 'seg-{:06d}-frame-{:02d}-right.jpeg'.format(segment_ind + 1, frame_ind)))
+			stacked_right[:, :, :, frame_ind] = imread(os.path.join(args.source_folder, 'seg-{:06d}-frame-{:02d}-left.jpeg'.format(segment_ind + 1, frame_ind)))
 		
 		full_file_path = os.path.join(args.target_folder, image_filename)
 		if in_train[segment_ind]:
