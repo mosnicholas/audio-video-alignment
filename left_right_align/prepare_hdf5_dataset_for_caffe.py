@@ -109,7 +109,7 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 			with h5py.File(full_file_path, 'w') as f:
 				f['left'] = np.transpose(stacked_left, (2, 1, 0))
 				f['right'] = np.transpose(stacked_right, (2, 1, 0))
-				f['label'] = offsets[segment_ind]
+				f['label'] = np.array(offsets[segment_ind])
 				#print np.shape(np.transpose(stacked_left, (2, 1, 0)))
 			#with h5py.File(label_filename, 'w') as f:
 			#	f['label'] = offsets[segment_ind]
@@ -118,7 +118,7 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 			with h5py.File(full_file_path, 'w') as f:
 				f['left'] = np.transpose(stacked_left, (2, 1, 0))
 				f['right'] = np.transpose(stacked_right, (2, 1, 0))
-				f['label'] = offsets[segment_ind]
+				f['label'] = np.array(offsets[segment_ind])
 			#with h5py.File(label_filename, 'w') as f:
 			#	f['label'] = offsets[segment_ind]
 			filenames_test.append(full_file_path)
