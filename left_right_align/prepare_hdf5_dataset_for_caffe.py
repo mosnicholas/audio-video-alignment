@@ -21,6 +21,8 @@ parser.add_argument('--source_folder', default='/mnt/data/dataset',
   help='The path to the source video')
 parser.add_argument('--resume_from', default=False,
 	help='The segment to resume processing from.')
+parser.add_argument('--num_to_process', default=False,
+	help='How many of the provided segments to process.')
 args = parser.parse_args()
 
 def rgb2gray(rgb):
@@ -102,7 +104,7 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 			stacked_left[:, :, frame_ind] = imread(os.path.join(args.source_folder, 'seg-{:06d}-frame-{:02d}-right.jpeg'.format(segment_ind + 1, frame_ind)))
 			stacked_right[:, :, frame_ind] = imread(os.path.join(args.source_folder, 'seg-{:06d}-frame-{:02d}-left.jpeg'.format(segment_ind + 1, frame_ind)))
 		if in_train[segment_ind]:
-			with h5py.File(os.join.path(args.target_folder, image_filename), 'w') as f:
+			with h5py.File(os.path.join(args.target_folder, image_filename), 'w') as f:
 				f['left'] = np.transpose(stacked_left, (2, 1, 0))
 				f['right'] = np.transpose(stacked_right, (2, 1, 0))
 				f['label'] = offsets[segment_ind]
@@ -111,7 +113,7 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 			#	f['label'] = offsets[segment_ind]
 			#filenames_train.append(image_filename)
 		else:
-			with h5py.File(os.join.path(args.target_folder, image_filename), 'w') as f:
+			with h5py.File(os.path.join(args.target_folder, image_filename), 'w') as f:
 				f['left'] = np.transpose(stacked_left, (2, 1, 0))
 				f['right'] = np.transpose(stacked_right, (2, 1, 0))
 				f['label'] = offsets[segment_ind]
@@ -137,6 +139,7 @@ def main():
 	while os.path.isfile(os.path.join(args.source_folder, 'seg-{:06d}-frame-00-left.jpeg'.format(num_segments))):
 		num_segments += 1
 	print 'Processing ' + str(num_segments) + ' segments.'
+	num_segments = min(args.num_to_process, num_segments) if args.num_to_process else num_segments
 
 	if not os.path.isdir(args.target_folder):
 		os.mkdir(args.target_folder)
@@ -149,7 +152,7 @@ def main():
 			test_inds_reader = csv.reader(test_inds_csv, delimiter=',')
 			test_inds = [row[0] for row in test_inds_reader]
 	else:
-		test_inds = random.sample(segment_inds, 1000)
+		test_inds = random.sample(segment_inds, num_segments/5)
 		with open(test_inds_csv_path, 'w') as test_inds_csv:
 			w = csv.writer(test_inds_csv)
 			test_inds_to_write = [[ind] for ind in test_inds]
@@ -159,7 +162,9 @@ def main():
 	in_train[test_inds] = False
 
 	if args.resume_from:
-		offsets = offsets[resume_from:]
+		offsets = offsets[args.resume_from:]
+	else if args.num_to_process:
+		offsets[:args.num_to_process]
 
 	process_inds(0, len(offsets), 0, in_train, offsets)
 
