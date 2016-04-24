@@ -12,7 +12,7 @@ layer {
   }
   hdf5_data_param {
     source: "/mnt/data/dataset_prepared/examples_train.txt"
-    batch_size: 64
+    batch_size: 8
   }
 }
 layer {
@@ -26,7 +26,7 @@ layer {
   }
   hdf5_data_param {
     source: "/mnt/data/dataset_prepared/examples_test.txt"
-    batch_size: 64
+    batch_size: 8
   }
 }
 
