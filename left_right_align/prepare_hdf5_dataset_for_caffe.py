@@ -30,9 +30,9 @@ def read_offsets(filename):
 	offsets = []
 	with open(os.path.join(args.source_folder, filename), 'rb') as offsets_file:
 		offsets_reader = csv.reader(offsets_file, delimiter=',')
-		for row in offsets_reader:
-			offsets.append(row[1])
-	offsets = offsets[1:]
+		for ind, row in enumerate(offsets_reader):
+			if not ind == 0:
+				offsets.append(int(row[1]))
 	max_offset = max(offsets)
 	return map(lambda offset: float(offset) / max_offset, offsets)
 
