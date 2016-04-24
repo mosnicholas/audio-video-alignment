@@ -4,8 +4,8 @@ name: "siamese_caffenet_train_val"
 layer {
   name: "pair_data"
   type: "HDF5Data"
-  top: "image1"
-  top: "image2"
+  top: "left"
+  top: "right"
   top: "label"
   include {
     phase: TRAIN
@@ -18,8 +18,8 @@ layer {
 layer {
   name: "pair_data"
   type: "HDF5Data"
-  top: "image1"
-  top: "image2"
+  top: "left"
+  top: "right"
   top: "label"
   include {
     phase: TEST
@@ -35,7 +35,7 @@ layer {
 layer {
   name: "conv1"
   type: "Convolution"
-  bottom: "image1"
+  bottom: "left"
   top: "conv1"
   param {
     name: "conv1_w"
@@ -292,7 +292,7 @@ layer {
 layer {
   name: "conv1_rep"
   type: "Convolution"
-  bottom: "image2"
+  bottom: "right"
   top: "conv1_rep"
   param {
     name: "conv1_w"
