@@ -86,8 +86,11 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 	filenames_test = []
 	filenames_train_path = os.path.join(args.target_folder, '/examples_train.txt')
 	filenames_test_path = os.path.join(args.target_folder, '/examples_test.txt')
-	os.remove(filenames_train_path)
-	os.remove(filenames_test_path)
+	try:
+		os.remove(filenames_train_path)
+		os.remove(filenames_test_path)
+	except OSError:
+		pass
 
 	for segment_ind in range(seg_start_ind, seg_end_ind):
 		image_filename = 'seg-{:06d}-image.h5'.format(segment_ind + 1)
