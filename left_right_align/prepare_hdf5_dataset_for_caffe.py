@@ -84,8 +84,8 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 	sample_frame = np.array(imread(os.path.join(args.source_folder, 'seg-000001-frame-00-right.jpeg')))
 	filenames_train = []
 	filenames_test = []
-	filenames_train_path = os.path.join(args.target_folder, '/examples_train.txt')
-	filenames_test_path = os.path.join(args.target_folder, '/examples_test.txt')
+	filenames_train_path = os.path.join(args.target_folder, 'examples_train.txt')
+	filenames_test_path = os.path.join(args.target_folder, 'examples_test.txt')
 	try:
 		os.remove(filenames_train_path)
 		os.remove(filenames_test_path)
@@ -103,17 +103,17 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 			stacked_right[:, :, frame_ind] = imread(os.path.join(args.source_folder, 'seg-{:06d}-frame-{:02d}-left.jpeg'.format(segment_ind + 1, frame_ind)))
 		if in_train[segment_ind]:
 			with h5py.File(image_filename, 'w') as f:
-				f['left'] = np.transpose(stacked_left, (2, 0, 1))
-				f['right'] = np.transpose(stacked_right, (2, 0, 1))
+				f['left'] = np.transpose(stacked_left, (2, 1, 0))
+				f['right'] = np.transpose(stacked_right, (2, 1, 0))
 				f['label'] = offsets[segment_ind]
-				print np.shape(np.transpose(stacked_left, (2, 0, 1)))
+				#print np.shape(np.transpose(stacked_left, (2, 1, 0)))
 			#with h5py.File(label_filename, 'w') as f:
 			#	f['label'] = offsets[segment_ind]
 			#filenames_train.append(image_filename)
 		else:
 			with h5py.File(image_filename, 'w') as f:
-				f['left'] = np.transpose(stacked_left, (2, 0, 1))
-				f['right'] = np.transpose(stacked_right, (2, 0, 1))
+				f['left'] = np.transpose(stacked_left, (2, 1, 0))
+				f['right'] = np.transpose(stacked_right, (2, 1, 0))
 				f['label'] = offsets[segment_ind]
 			#with h5py.File(label_filename, 'w') as f:
 			#	f['label'] = offsets[segment_ind]
