@@ -165,7 +165,7 @@ def main():
 	if args.resume_from:
 		offsets = offsets[args.resume_from:]
 	elif args.num_to_process:
-		offsets[:args.num_to_process]
+		offsets = offsets[:args.num_to_process]
 
 	process_inds(0, len(offsets), 0, in_train, offsets)
 
