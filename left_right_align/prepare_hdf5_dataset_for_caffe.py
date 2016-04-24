@@ -81,7 +81,7 @@ def process_ind(segment_ind, train_images_txn, train_labels_txn, test_images_txn
 
 def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 
-	sample_frame = np.array(imread(os.path.join(args.source_folder, 'seg-000000-frame-00-right.jpeg')))
+	sample_frame = np.array(imread(os.path.join(args.source_folder, 'seg-000001-frame-00-right.jpeg')))
 	filenames_train = []
 	filenames_test = []
 	filenames_train_path = os.path.join(args.target_folder, '/examples_train.txt')
