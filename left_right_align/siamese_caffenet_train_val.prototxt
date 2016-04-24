@@ -546,10 +546,20 @@ layer {
 # Recombination
 
 layer {
-  name: "fc7"
-  type: "InnerProduct"
+  name: "recombine"
+  type: "Concat"
   bottom: "fc6"
   bottom: "fc6_rep"
+  top: "recombine"
+  concat_param {
+    axis: 1
+  }
+}
+
+layer {
+  name: "fc7"
+  type: "InnerProduct"
+  bottom: "recombine"
   top: "fc7"
   param {
     lr_mult: 1
