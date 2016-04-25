@@ -51,7 +51,7 @@ def split_video():
   offset_csv = os.path.join(args.target_folder, 'offsets.csv')
   offsets = []
   video = VideoFileClip(args.source_path, audio=False)
-  video = moviepy.video.fx.all.resize((128, 96))
+  video = video.resize((96, 128))
   framerate = video.fps
   width = (np.size(video.get_frame(0), 1) - args.middle_gap_pixel_size) / 2
   left_video = moviepy.video.fx.all.crop(video, x1=0, width=width)
