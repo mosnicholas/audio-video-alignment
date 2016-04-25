@@ -11,15 +11,15 @@ from moviepy.editor import VideoFileClip, AudioFileClip, ImageSequenceClip
 
 parser = argparse.ArgumentParser(
   description='Create a left / right alignment dataset from a local video file.')
-parser.add_argument('--target_folder', default='./data/dataset',
+parser.add_argument('--target_folder', default='/mnt/data/dataset',
   help='The parent directory for the dataset.')
-parser.add_argument('--source_path', default='./data/source/hitch_hiker.mp4',
+parser.add_argument('--source_path', default='/mnt/data/source/hitch_hiker.mp4',
   help='The path to the source video')
 parser.add_argument('--youtube_id', default=False,
   help='If specified, the youtube url will be downloaded as source.')
 parser.add_argument('--youtube_target', default='./data/source/',
   help='Location to store the downloaded source video.')
-parser.add_argument('--middle_gap_pixel_size', default=10,
+parser.add_argument('--middle_gap_pixel_size', default=0,
   help='The size of the gap between the left and right images.')
 parser.add_argument('--output_starting_ind', default=1,
   help='The index to start counting at for output files.')
@@ -36,17 +36,14 @@ def download_youtube_video(youtube_id, target_path, create_subtitles=False):
   target_filename = os.path.join(target_path, 'hitch_hiker')
   command = 'youtube-dl %s -o %s' % (youtube_id, target_filename)
   if subprocess.call(command, shell=True) == 0:
-    if create_subtitles: create_millisecond_subtitles(target_filename)
-  else:
-    return False
-  return True
+    return True
+  return False
 
 def main():
   if args.youtube_id:
     print 'Downloading video with youtube-dl...'
     download_youtube_video(args.youtube_id, args.youtube_target)
-  else:
-    split_video()
+  split_video()
 
 def split_video():
 
@@ -54,6 +51,7 @@ def split_video():
   offset_csv = os.path.join(args.target_folder, 'offsets.csv')
   offsets = []
   video = VideoFileClip(args.source_path, audio=False)
+  video = moviepy.video.fx.all.resize((128, 96))
   framerate = video.fps
   width = (np.size(video.get_frame(0), 1) - args.middle_gap_pixel_size) / 2
   left_video = moviepy.video.fx.all.crop(video, x1=0, width=width)
