@@ -9,7 +9,7 @@ test_interval: 500
 base_lr: 0.01
 lr_policy: "step"
 gamma: 0.1
-stepsize: 5000
+stepsize: 20000
 momentum: 0.9
 weight_decay: 0.0005
 # Display every 100 iterations
@@ -17,7 +17,7 @@ display: 100
 # The maximum number of iterations
 max_iter: 50000
 # snapshot intermediate results
-snapshot: 2000
+snapshot: 5000
 snapshot_prefix: "snapshots"
 # solver mode: CPU or GPU
 solver_mode: GPU
