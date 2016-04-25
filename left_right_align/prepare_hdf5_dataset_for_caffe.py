@@ -166,7 +166,7 @@ def main():
 			test_inds_reader = csv.reader(test_inds_csv, delimiter=',')
 			test_inds = [row[0] for row in test_inds_reader]
 	else:
-		test_inds = random.sample(segment_inds, num_segments/5)
+		test_inds = random.sample(segment_inds, num_segments/10)
 		with open(test_inds_csv_path, 'w') as test_inds_csv:
 			w = csv.writer(test_inds_csv)
 			test_inds_to_write = [[ind] for ind in test_inds]
