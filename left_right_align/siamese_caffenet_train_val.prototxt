@@ -74,14 +74,25 @@ layer {
   top: "pool1"
   pooling_param {
     pool: MAX
-    kernel_size: 3
+    kernel_size: 2
     stride: 2
+  }
+}
+layer {
+  name: "norm1"
+  type: "LRN"
+  bottom: "pool1"
+  top: "norm1"
+  lrn_param {
+    local_size: 5
+    alpha: 0.0001
+    beta: 0.75
   }
 }
 layer {
   name: "conv2"
   type: "Convolution"
-  bottom: "pool1"
+  bottom: "norm1"
   top: "conv2"
   param {
     name: "conv2_w"
@@ -120,14 +131,25 @@ layer {
   top: "pool2"
   pooling_param {
     pool: MAX
-    kernel_size: 3
+    kernel_size: 2
     stride: 2
+  }
+}
+layer {
+  name: "norm1"
+  type: "LRN"
+  bottom: "pool2"
+  top: "norm1"
+  lrn_param {
+    local_size: 5
+    alpha: 0.0001
+    beta: 0.75
   }
 }
 layer {
   name: "conv3"
   type: "Convolution"
-  bottom: "pool2"
+  bottom: "norm2"
   top: "conv3"
   param {
     name: "conv3_w"
@@ -214,8 +236,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -236,7 +257,7 @@ layer {
   top: "pool5"
   pooling_param {
     pool: MAX
-    kernel_size: 3
+    kernel_size: 
     stride: 2
   }
 }
@@ -258,8 +279,7 @@ layer {
   inner_product_param {
     num_output: 4096
     weight_filler {
-      type: "gaussian"
-      std: 0.005
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -306,8 +326,7 @@ layer {
     kernel_size: 7
     stride: 3
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -328,14 +347,25 @@ layer {
   top: "pool1_rep"
   pooling_param {
     pool: MAX
-    kernel_size: 3
+    kernel_size: 2
     stride: 2
+  }
+}
+layer {
+  name: "norm1_rep"
+  type: "LRN"
+  bottom: "pool1_rep"
+  top: "norm1_rep"
+  lrn_param {
+    local_size: 5
+    alpha: 0.0001
+    beta: 0.75
   }
 }
 layer {
   name: "conv2_rep"
   type: "Convolution"
-  bottom: "pool1_rep"
+  bottom: "norm1_rep"
   top: "conv2_rep"
   param {
     name: "conv2_w"
@@ -352,8 +382,7 @@ layer {
     pad: 2
     kernel_size: 5
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -374,14 +403,25 @@ layer {
   top: "pool2_rep"
   pooling_param {
     pool: MAX
-    kernel_size: 3
+    kernel_size: 2
     stride: 2
+  }
+}
+layer {
+  name: "norm2_rep"
+  type: "LRN"
+  bottom: "pool2_rep"
+  top: "norm2_rep"
+  lrn_param {
+    local_size: 5
+    alpha: 0.0001
+    beta: 0.75
   }
 }
 layer {
   name: "conv3_rep"
   type: "Convolution"
-  bottom: "pool2_rep"
+  bottom: "norm2_rep"
   top: "conv3_rep"
   param {
     name: "conv3_w"
@@ -398,8 +438,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -433,8 +472,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -468,8 +506,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -490,7 +527,7 @@ layer {
   top: "pool5_rep"
   pooling_param {
     pool: MAX
-    kernel_size: 3
+    kernel_size: 2
     stride: 2
   }
 }
@@ -512,8 +549,7 @@ layer {
   inner_product_param {
     num_output: 4096
     weight_filler {
-      type: "gaussian"
-      std: 0.005
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -566,8 +602,7 @@ layer {
   inner_product_param {
     num_output: 256
     weight_filler {
-      type: "gaussian"
-      std: 0.005
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -607,8 +642,7 @@ layer {
   inner_product_param {
     num_output: 1
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
