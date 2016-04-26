@@ -136,10 +136,10 @@ layer {
   }
 }
 layer {
-  name: "norm1"
+  name: "norm2"
   type: "LRN"
   bottom: "pool2"
-  top: "norm1"
+  top: "norm2"
   lrn_param {
     local_size: 5
     alpha: 0.0001
