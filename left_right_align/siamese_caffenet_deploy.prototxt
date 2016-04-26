@@ -5,7 +5,7 @@ layer {
   top: "left"
   top: "right"
   input_param {
-    shape: { dim: 1 dim: 10 dim: 64 dim: 96 } # label, channel, width, height
+    shape: { dim: 1 dim: 10 dim: 96 dim: 64 } # label, channel, width, height
   }
 }
 
