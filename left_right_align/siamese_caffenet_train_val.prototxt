@@ -657,7 +657,4 @@ layer {
   bottom: "fc8"
   bottom: "label"
   top: "loss"
-  contrastive_loss_param {
-    margin: 1
-  }
 }

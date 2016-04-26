@@ -2,19 +2,10 @@ name: "siamese_caffenet_deploy"
 layer {
   name: "pair_data"
   type: "Data"
-  top: "pair_data"
+  top: "left"
+  top: "right"
   input_param {
-    shape: { dim: 1 dim: 20 dim: 235 dim: 360 } # label, channel, width, height
-  }
-layer {
-  name: "slice"
-  type: "Slice"
-  bottom: "pair_data"
-  top: "slice1"
-  top: "slice2"
-  slice_param {
-    slice_dim: 1
-    slice_point: 10
+    shape: { dim: 1 dim: 10 dim: 64 dim: 96 } # label, channel, width, height
   }
 }
 
@@ -23,12 +14,12 @@ layer {
 layer {
   name: "conv1"
   type: "Convolution"
-  bottom: "slice1"
+  bottom: "left"
   top: "conv1"
   convolution_param {
     num_output: 96
-    kernel_size: 11
-    stride: 4
+    kernel_size: 5
+    stride: 2
   }
 }
 layer {
@@ -67,8 +58,7 @@ layer {
   convolution_param {
     num_output: 256
     pad: 2
-    kernel_size: 5
-    group: 2
+    kernel_size: 4
   }
 }
 layer {
@@ -125,7 +115,6 @@ layer {
     num_output: 384
     pad: 1
     kernel_size: 3
-    group: 2
   }
 }
 layer {
@@ -187,13 +176,32 @@ layer {
     dropout_ratio: 0.5
   }
 }
+
+# Replica of Other CaffeNet
+
+# paste a copy of the above net here.
+# change layer names, but keep param names the same.
+
+# Recombination
+
+layer {
+  name: "recombine"
+  type: "Concat"
+  bottom: "fc6"
+  bottom: "fc6_rep"
+  top: "recombine"
+  concat_param {
+    axis: 1
+  }
+}
+
 layer {
   name: "fc7"
   type: "InnerProduct"
-  bottom: "fc6"
+  bottom: "recombine"
   top: "fc7"
   inner_product_param {
-    num_output: 4096
+    num_output: 256
   }
 }
 layer {
@@ -211,49 +219,20 @@ layer {
     dropout_ratio: 0.5
   }
 }
+
 layer {
   name: "fc8"
   type: "InnerProduct"
   bottom: "fc7"
-  top: "feat"
-  inner_product_param {
-    num_output: 1000
-  }
-}
-
-# Replica of Other CaffeNet
-
-# paste a copy of the above net here.
-# change layer names, but keep param names the same.
-
-# Recombination
-
-
-layer {
-  name: "recombine"
-  type: "InnerProduct"
-  bottom: "feat"
-  bottom: "feat_p"
-  top: "loss"
+  top: "fc8"
   inner_product_param {
     num_output: 1
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
   }
-
 }
 
 layer {
-  name: "loss"
-  type: "SigmoidCrossEntropyLoss"
-  bottom: "recombine"
-  bottom: "label"
-  top: "loss"
-  contrastive_loss_param {
-    margin: 1
-  }
+  name: "out"
+  type: "Sigmoid"
+  bottom: "fc8"
+  top: "out"
 }
