@@ -33,7 +33,7 @@ for i in xrange(4):
 
 print frames_correct
 
-def view_side_by_side():
+def view_side_by_side_lmdb():
   from matplotlib import pyplot as plt
   ax = []
   with lmdb.open('frames_test_0').begin() as txn, \
@@ -76,8 +76,26 @@ for i in xrange(100):
     left_arr = np.array(hf.get('left'))
     right_arr = np.array(hf.get('right'))
     offset = int(offsets[i])
-    frames_correct = frames_correct and np.all(left_arr[:, :, offset - 1:10] == right_arr[:, :, :10 - (offset - 1)])
-    frames_correct = frames_correct and np.all(right_arr[:, :, 10 - (offset - 1):] == 0)
+    frames_correct = frames_correct and np.all(left_arr[0, offset - 1:10, :, :] == right_arr[0, :10 - (offset - 1), :, :])
+    frames_correct = frames_correct and np.all(right_arr[0, 10 - (offset - 1):, :, :] == 0)
 
 print frames_correct
+
+def view_side_by_side_hdf5():
+  from matplotlib import pyplot as plt
+  ax = []
+  with h5py.File('frame-000000.h5', 'r') as hf:
+    offset = np.array(hf.get('label'))[0, 0, 0, 0]
+    left_ims = np.array(hf.get('left'))
+    right_ims = np.array(hf.get('right'))
+    for v in xrange(10):
+      ax.append(plt.subplot(2, 10, v + 1))
+      plt.imshow(left_ims[:, :, v], cmap='gray')
+      ax.append(plt.subplot(2, 10, 10 + v + 1))
+      plt.imshow(right_ims[:, :, v], cmap='gray')
+    for a in ax:
+      a.set_xticklabels([])
+      a.set_yticklabels([])
+    plt.subplots_adjust(wspace=0, hspace=0)
+    plt.show()
 
