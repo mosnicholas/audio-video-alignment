@@ -61,7 +61,10 @@ def view_side_by_side_lmdb():
 import numpy as np
 import h5py
 
-offsets = np.load('/Users/nicholasmoschopoulos/Documents/Classes/Semester8/CS280/project/data/clipped/hitch_hiker/offsets.npz')['offsets']
+local = '/Users/nicholasmoschopoulos/Documents/Classes/Semester8/CS280/project/data/clipped/hitch_hiker/offsets.npz'
+ec2 = '/mnt/data/clipped/hitch_hiker/offsets.npz'
+
+offsets = np.load(local)['offsets']
 match = True
 for i in xrange(100):
   with h5py.File('frame-%06d.h5' % i, 'r') as hf:
@@ -75,7 +78,7 @@ for i in xrange(100):
   with h5py.File('frame-%06d.h5' % i, 'r') as hf:
     left_arr = np.array(hf.get('left'))
     right_arr = np.array(hf.get('right'))
-    offset = int(offsets[i])
+    offset = int(offsets[i] * 10)
     frames_correct = frames_correct and np.all(left_arr[0, offset - 1:10, :, :] == right_arr[0, :10 - (offset - 1), :, :])
     frames_correct = frames_correct and np.all(right_arr[0, 10 - (offset - 1):, :, :] == 0)
 

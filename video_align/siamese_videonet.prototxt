@@ -659,3 +659,14 @@ layer {
   bottom: "label"
   top: "loss"
 }
+
+layer {
+  name: "accuracy"
+  type: "EuclideanLoss"
+  bottom: "fc8"
+  bottom: "label"
+  top: "accuracy"
+  include {
+    phase: TEST
+  }
+}

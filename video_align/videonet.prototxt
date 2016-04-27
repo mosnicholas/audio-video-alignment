@@ -179,13 +179,6 @@ layer {
   }
 }
 
-# Replica of Other CaffeNet
-
-# paste a copy of the above net here.
-# change layer names, but keep param names the same.
-
-# Recombination
-
 layer {
   name: "recombine"
   type: "Concat"
