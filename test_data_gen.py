@@ -1,4 +1,6 @@
 
+## Test LMDB data
+
 import lmdb
 import numpy as np
 
@@ -52,4 +54,30 @@ def view_side_by_side():
       print 'running for key: %d, with offset %s. It matches actual data: %r' % (u, offset, int(offset) == int(offsets[u]))
       plt.subplots_adjust(wspace=0, hspace=0)
       plt.show()
+
+
+## Test HDF5 data
+
+import numpy as np
+import h5py
+
+offsets = np.load('/Users/nicholasmoschopoulos/Documents/Classes/Semester8/CS280/project/data/clipped/hitch_hiker/offsets.npz')['offsets']
+match = True
+for i in xrange(100):
+  with h5py.File('frame-%06d.h5' % i, 'r') as hf:
+    d = np.array(hf.get('label'))
+    match = (match and int(d[0, 0, 0, 0]) == int(offsets[i]))
+
+print match
+
+frames_correct = True
+for i in xrange(100):
+  with h5py.File('frame-%06d.h5' % i, 'r') as hf:
+    left_arr = np.array(hf.get('left'))
+    right_arr = np.array(hf.get('right'))
+    offset = int(offsets[i])
+    frames_correct = frames_correct and np.all(left_arr[:, :, offset - 1:10] == right_arr[:, :, :10 - (offset - 1)])
+    frames_correct = frames_correct and np.all(right_arr[:, :, 10 - (offset - 1):] == 0)
+
+print frames_correct
 

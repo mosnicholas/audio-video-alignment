@@ -2,6 +2,7 @@
 import os
 import csv
 import lmdb
+import h5py
 import shutil
 import argparse
 import subprocess
@@ -28,12 +29,10 @@ outfolder = os.path.join(CLIPPED_VIDEO_FOLDER, 'hitch_hiker')
 # command line arguments
 parser = argparse.ArgumentParser(description="""Generate the train 
   and test dataset for video alignment problems""")
-parser.add_argument('--download_target_folder', default=RAW_VIDEO_FOLDER,
-  help='The parent directory for the dataset.')
-parser.add_argument('--video_source', default=movie_path,
-  help='The path to the source video')
+parser.add_argument('--data_source', default=outfolder,
+  help='The directory for the dataset.')
 parser.add_argument('--target_folder', default=outfolder,
-  help='The parent directory for the dataset.')
+  help='The directory for the function output.')
 args = parser.parse_args()
 
 def greyscale(image):
@@ -171,7 +170,6 @@ def load_data_into_lmdb(data_source_folder, target_folder):
 
   offsets = np.load(offset_file_path)['offsets']
   num_splits = len(offsets)
-  first_split = 0
 
   if os.path.isfile(train_test_file):
     train = np.load(train_test_file)['train']
@@ -199,14 +197,64 @@ def load_data_into_lmdb(data_source_folder, target_folder):
       frame_paths, offset_start, offset_end, i
     )).start()
 
+def load_data_into_hdf5(data_source_folder, target_folder):
+  offset_file_path = os.path.join(data_source_folder, 'offsets.npz')
+  if not os.path.isdir(target_folder): os.makedirs(target_folder)
+  train_test_file = os.path.join(target_folder, 'train_test_indices.npz')
+  training_examples = os.path.join(target_folder, 'training_examples.txt')
+  test_examples =  os.path.join(target_folder, 'test_examples.txt')
+  h5_titles = 'frame-%06d.h5'
+
+  offsets = np.load(offset_file_path)['offsets']
+  num_splits = len(offsets)
+
+  if os.path.isfile(train_test_file):
+    train = np.load(train_test_file)['train']
+  else:
+    train = np.ones((num_splits), dtype=bool)
+    train[np.random.randint(0, num_splits, int(num_splits * 0.2))] = False
+    np.savez_compressed(train_test_file, train=train)
+    np.savetxt(training_examples, map(lambda x: h5_titles % x, np.where(train==True)[0]), fmt="%s")
+    np.savetxt(test_examples, map(lambda x: h5_titles % x, np.where(train==False)[0]), fmt="%s")
+
+  video_title = 'frame-%06d.jpg'
+  frame_paths = os.path.join(data_source_folder, video_title)
+  frame_shape = imread(frame_paths % 1).shape
+
+  stacked = np.zeros((frame_shape[0], frame_shape[1], 20))
+  prev_stacked = np.zeros((frame_shape[0], frame_shape[1], 9))
+
+  for i in xrange(9):
+    prev_stacked[:, :, i] = greyscale(imread(frame_paths % i))
+    prev_stacked[:, :, i] = prev_stacked[:, :, i]/prev_stacked[:, :, i].max()
+
+  for split in xrange(num_splits):
+    stacked[:, :, 10:] = 0
+    stacked[:, :, :9] = prev_stacked
+    stacked[:, :, 9] = greyscale(imread(frame_paths % (split + 9)))
+    stacked[:, :, 9] = stacked[:, :, 9]/stacked[:, :, 9].max()
+    prev_stacked = stacked[:, :, 1:10]
+    stacked[:, :, 10:] = stacked[:, :, offsets[split] - 1:9 + offsets[split]]
+
+    outfile = os.path.join(target_folder, h5_titles % split)
+
+    with h5py.File(outfile, 'w') as f:
+      f['left'] = stacked[:, :, :10]
+      f['right'] = stacked[:, :, 10:]
+      f['label'] = np.zeros((1, 1, 1, 1))
+      f['label'][0, 0, 0, 0] = offsets[split]
+
+    if split % 500 == 0:
+      print '%s splits processed' % (split)
+    
 def download_trump():
-  return download_raw_youtube_video(TRUMP_ID, args.download_target_folder, 'china.mp4', True)
+  return download_raw_youtube_video(TRUMP_ID, args.target_folder, 'china.mp4', True)
 
 def download_movie():
-  return download_raw_youtube_video(MOVIE_ID, args.download_target_folder, 'hitch_hiker.mp4')
+  return download_raw_youtube_video(MOVIE_ID, args.target_folder, 'hitch_hiker.mp4')
 
 if __name__ == '__main__':
   # Pipeline: Download movie -> create dataset -> load into lmdb
   # download_movie()
-  # create_movie_dataset(args.video_source, args.target_folder)
-  load_data_into_lmdb(args.target_folder, args.target_folder)
+  # create_movie_dataset(args.data_source, args.target_folder)
+  load_data_into_hdf5(args.data_source, args.target_folder)
