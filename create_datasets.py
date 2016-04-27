@@ -146,7 +146,7 @@ def load_single_datum_into_lmdb(frames_train_path, labels_train_path, frames_tes
       stacked[:, :, :9] = prev_stacked
       stacked[:, :, 9] = greyscale(imread(frame_paths % (split + 9)))
       prev_stacked = stacked[:, :, 1:10]
-      stacked[:, :, 9 + offsets[shifted]:] = stacked[:, :, offsets[shifted] - 1:10]
+      stacked[:, :, 10:] = stacked[:, :, offsets[shifted] - 1:9 + offsets[shifted]]
       stacked_data = caffe.io.array_to_datum(stacked)
 
       if train_values[shifted]:
