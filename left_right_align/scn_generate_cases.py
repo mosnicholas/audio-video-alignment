@@ -14,7 +14,7 @@ import caffe
 # Set the right path to your model definition file, pretrained model weights,
 # and the image you would like to classify.
 MODEL_FILE = '~/audio-video-alignment/left_right_align/siamese_caffenet_deploy.prototxt'
-PRETRAINED = '~/audio-video-alignment/left_right_align/snapshots/scn_iter_50000.solverstate'
+PRETRAINED = '/mnt/data/snapshots/scn_iter_20000.solverstate'
 DATASET_PATH = '/mnt/data/dataset_prepared'
 EXAMPLES_TXT = os.path.join(DATASET_PATH, 'examples_test.txt')
 

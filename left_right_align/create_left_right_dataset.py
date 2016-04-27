@@ -7,7 +7,7 @@ import numpy as np
 import moviepy
 from scipy import misc
 from random import randint, random as rand
-from moviepy.editor import VideoFileClip, AudioFileClip, ImageSequenceClip
+from moviepy.editor import VideoFileClip, AudioFileClip, ImageSequenceClip, CompositeVideoClip, TextClip
 
 parser = argparse.ArgumentParser(
   description='Create a left / right alignment dataset from a local video file.')
@@ -45,7 +45,62 @@ def main():
   if args.youtube_id:
     print 'Downloading video with youtube-dl...'
     download_youtube_video(args.youtube_id, args.youtube_target)
-  split_video()
+  if args.presentation_movie:
+    split_video_pres()
+  else:
+    split_video()
+
+def split_video_pres():
+
+  movie_title = os.path.split(args.source_path)[-1]
+  video = VideoFileClip(args.source_path, audio=False)
+  video = video.subclip((1, 8, 36), (1, 8, 41))
+  video = video.resize((128, 96))
+  framerate = video.fps
+  width = (np.size(video.get_frame(0), 1) - args.middle_gap_pixel_size) / 2
+  left_video = moviepy.video.fx.all.crop(video, x1=0, width=width)
+  right_video = moviepy.video.fx.all.crop(video, x1=width + args.middle_gap_pixel_size, width=width)
+  output_ind = args.output_starting_ind
+  offsets_filename = "pres-offsets.txt"
+  offset_csv = os.path.join(args.target_folder, offsets_filename)
+  file_prefix = "pres"
+
+  pres_offset = 10
+
+  all_left_frames = []
+  all_right_frames = []
+
+  left_frame_iterator = left_video.iter_frames()
+  for ind, right_frame in enumerate(right_video.iter_frames()):
+    if ind >= pres_offset:
+      left_frame = rgb2gray(left_frame_iterator.next())
+      right_frame = rgb2gray(right_frame)
+      if (ind % 10 == 0): # INITIALIZE
+        left_frames = []
+        right_frames = []
+      all_right_frames.append(np.transpose(np.tile(right_frame, (3, 1, 1))))
+      right_frames.append(right_frame)
+      all_left_frames.append(np.transpose(np.tile(left_frame, (3, 1, 1))))
+      left_frames.append(left_frame)
+      if (ind % 10 == 9): # SAVE SEGMENT FRAMES TO JPEG
+        for frame_ind, left_frame in enumerate(left_frames):
+          misc.toimage(left_frame, cmin=np.min(left_frame), cmax=np.max(left_frame)).save(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-left.jpeg').format(output_ind, frame_ind)))
+        for frame_ind, right_frame in enumerate(right_frames):
+          misc.toimage(right_frame, cmin=np.min(right_frame), cmax=np.max(right_frame)).save(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, frame_ind)))
+        output_ind += 1
+      if (ind % 1000 == 0):
+        print('Finished processing {:d} datapoints.'.format(output_ind))
+  with open(offset_csv, 'w') as offset_csv_file:
+    offset_csv_file.write(str(pres_offset) + "\n")
+  leftMovie = ImageSequenceClip(all_left_frames, fps=framerate);
+  rightMovie = ImageSequenceClip(all_right_frames, fps=framerate);
+  rightMovie.set_pos((64, 0))
+  #labelClip = TextClip("offset: " + str(pres_offset))
+  #labelClip.set_position("center")
+  compositeMovie = CompositeVideoClip([leftMovie, rightMovie], size=(128, 96))
+  compositeMovie.write_videofile(os.path.join(args.target_folder, "pres_video.mp4"), codec='libx264', audio=False)
+  return True
+
 
 def split_video():
 
@@ -62,8 +117,8 @@ def split_video():
   right_video = moviepy.video.fx.all.crop(video, x1=width + args.middle_gap_pixel_size, width=width)
   right_frame_iterator = right_video.iter_frames()
   output_ind = args.output_starting_ind
-  file_prefix = "pres" if args.presentation_movie else "seg"
-  offsets_filename = "pres-offsets.csv" if args.presentation_movie else "offsets.csv" 
+  file_prefix = "seg"
+  offsets_filename = "offsets.csv" 
   offset_csv = os.path.join(args.target_folder, offsets_filename)
   offsets = []
 
