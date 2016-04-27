@@ -1,6 +1,8 @@
 name: "siamese_caffenet_deploy"
 #layer {
-input: "data"
+input: "left"
+input_shape: { dim: 1, dim: 10, dim: 96, dim: 64 }
+input: "right"
 input_shape: { dim: 1, dim: 10, dim: 96, dim: 64 }
 #  name: "pair_data"
 #  type: "Data"
