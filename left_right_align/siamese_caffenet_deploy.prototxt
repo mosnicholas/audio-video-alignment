@@ -222,7 +222,7 @@ layer {
   name: "norm1_rep"
   type: "LRN"
   bottom: "pool1_rep"
-  top: "norm1"
+  top: "norm1_rep"
   lrn_param {
     local_size: 5
     alpha: 0.0001
