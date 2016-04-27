@@ -229,7 +229,7 @@ layer {
     beta: 0.75
   }
 }
-layer {_rep
+layer {
   name: "conv2_rep"
   type: "Convolution"
   bottom: "norm1_rep"
