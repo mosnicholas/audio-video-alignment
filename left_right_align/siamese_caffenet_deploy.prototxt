@@ -1,13 +1,13 @@
 name: "siamese_caffenet_deploy"
-layer {
-  name: "pair_data"
-  type: "Data"
-  top: "left"
-  top: "right"
-  input_param {
-    shape: { dim: 1 dim: 10 dim: 96 dim: 64 } # label, channel, width, height
-  }
-}
+#layer {
+#  name: "pair_data"
+#  type: "Data"
+#  top: "left"
+#  top: "right"
+#  input_param {
+#    shape: { dim: 1 dim: 10 dim: 96 dim: 64 } # label, channel, width, height
+#  }
+#}
 
 # CaffeNet
 
@@ -20,7 +20,7 @@ layer {
     num_output: 96
     kernel_size: 5
     stride: 2
-    group: 5
+    group: 4
   }
 }
 layer {
@@ -60,7 +60,7 @@ layer {
     num_output: 256
     pad: 2
     kernel_size: 4
-    group: 3
+    group: 2
   }
 }
 layer {
