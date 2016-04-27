@@ -106,6 +106,9 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 			stacked_left[0, frame_ind, :, :] = imread(os.path.join(args.source_folder, 'seg-{:06d}-frame-{:02d}-right.jpeg'.format(segment_ind + 1, frame_ind)))
 			stacked_right[0, frame_ind, :, :] = imread(os.path.join(args.source_folder, 'seg-{:06d}-frame-{:02d}-left.jpeg'.format(segment_ind + 1, frame_ind)))
 		
+		if stacked_left.max() > 1 and stacked_right > 1:
+			stacked_left = .0039216 * stacked_left # Div by 255
+			stacked_right = .0039216 * stacked_right
 		full_file_path = os.path.join(args.target_folder, image_filename)
 		if in_train[segment_ind]:
 			with h5py.File(full_file_path, 'w') as f:

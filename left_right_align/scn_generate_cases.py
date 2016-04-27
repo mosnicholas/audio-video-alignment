@@ -52,7 +52,13 @@ def main():
 		w = csv.DictWriter(csvFile, fieldnames=["label", "prediction"])
 		w.writeheader()
 		w.writerows(np.hstack(np.transpose(np.array(labels)), np.transpose(np.array(predLabels))))
+	predLabels = np.array(predLabels)
+	threshold = np.median(predLabels)
 	print 'Using threshold ' + threshold + ' to separate binary labels.'
+	predLabelsBina = np.greater(predLabels, threshold)
+	labelsBina = np.greater(labels, 0)
+	print "Accuracy with threshold: {0:.2f}".format(100*float(np.sum(np.equal(predLabelsBina, labelsBina))) / labelsBina.size)
+
 
 def writeVideo(vidTuples, prefix):
 	for ind, vidTuple in enumerate(vidTuples):
