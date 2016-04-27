@@ -2,7 +2,6 @@
 import os
 import csv
 import lmdb
-import caffe
 import shutil
 import argparse
 import subprocess
@@ -10,6 +9,11 @@ import numpy as np
 import multiprocessing
 from scipy.ndimage import imread
 from moviepy.editor import VideoFileClip, AudioFileClip
+
+try:
+  import caffe
+except ImportError, e:
+  print 'No caffe module found, caffe not imported'
 
 TRUMP_ID = 'RDrfE9I8_hs'
 MOVIE_ID = 'XIeFKTbg3Aw'
@@ -34,30 +38,6 @@ args = parser.parse_args()
 
 def greyscale(image):
   return np.dot(image[:, :, :3], [0.299, 0.587, 0.114])
-
-def fun(f,q_in,q_out):
-    while True:
-        i,x = q_in.get()
-        if i is None:
-            break
-        q_out.put((i,f(x)))
-
-def parmap(f, X, nprocs = multiprocessing.cpu_count()):
-    q_in   = multiprocessing.Queue(1)
-    q_out  = multiprocessing.Queue()
-
-    proc = [multiprocessing.Process(target=fun,args=(f,q_in,q_out)) for _ in range(nprocs)]
-    for p in proc:
-        p.daemon = True
-        p.start()
-
-    sent = [q_in.put((i,x)) for i,x in enumerate(X)]
-    [q_in.put((None,None)) for _ in range(nprocs)]
-    res = [q_out.get() for _ in range(len(sent))]
-
-    [p.join() for p in proc]
-
-    return [x for i,x in sorted(res)]
 
 def create_millisecond_subtitles(outfile):
   with open(os.path.join(RAW_VIDEO_FOLDER, outfile.replace('mp4', 'srt')), 'w') as subs:
@@ -107,34 +87,47 @@ def create_trump_dataset(movie_path, target_folder):
     clip.audio.write_audiofile(audio_outfile, codec='aac')
   return True
 
-def create_movie_process(video, target_folder, earliest_frame, i):
-  shifted = i - earliest_frame
-  video_title = 'seg-%06d-frame-%%02d.jpg'
-  video_path = os.path.join(target_folder, video_title % shifted)
-  video.subclip(i, i + 10).write_images_sequence(video_path)
+def create_movie_process(video, target_folder, start_i, end_i, first_i, pnum, saved_frames):
+  video_path = os.path.join(target_folder, 'frame-%06d.jpg')
+  for i in xrange(start_i, end_i):
+    shifted = i - first_i
+    if shifted in saved_frames: continue
+    video.save_frame(video_path % shifted, i)
+    if (shifted % 500 == 0): print '%d frames saved on process %d' % (i - start_i, pnum)
 
 def create_movie_dataset(movie_path, target_folder):
   if not os.path.isdir(target_folder): os.makedirs(target_folder)
   video = VideoFileClip(movie_path)
   num_frames = int(video.fps * video.duration)
-  video = video.set_fps(1).set_duration(num_frames)
-  offset_file = os.path.join(target_folder, 'offsets.npz')
-  earliest_frame = 700
+  video = video.set_fps(1).set_duration(num_frames).resize(0.5)
+  first_frame = 650
+  num_cpus = multiprocessing.cpu_count()
 
-  num_done = len(os.listdir(target_folder))
+  saved_frames = set(map(lambda x: int(x) if x else 0, map(lambda f: ''.join(x for x in f if x.isdigit()), os.listdir(target_folder))))
+  num_done = len(saved_frames)
   if num_done == 0:
-    first_frame = earliest_frame
-    offsets = np.random.randint(2, 10, num_frames - first_frame)
+    offsets = np.random.randint(2, 10, num_frames - first_frame - 9)
+    offset_file = os.path.join(target_folder, 'offsets.npz')
     np.savez_compressed(offset_file, offsets=offsets)
-  else:
-    first_frame = (num_done - 1)/10 + earliest_frame - multiprocessing.cpu_count()
 
-  parmap(lambda x: create_movie_process(video, target_folder, earliest_frame, x), xrange(first_frame, num_frames))
+  frames_per_process = (num_frames - first_frame) / num_cpus
+  for i in xrange(num_cpus):
+    start_i = i * frames_per_process + first_frame
+    end_i = num_frames if i == num_cpus - 1 else start_i + frames_per_process
+    print start_i, end_i
+    multiprocessing.Process(
+      target=create_movie_process,
+      args=(video, target_folder, start_i, end_i, first_frame, i, saved_frames)
+    ).start()
 
   return True
 
 def load_single_datum_into_lmdb(frames_train_path, labels_train_path, frames_test_path, labels_test_path, shape, offsets, train_values, frame_paths, offset_start, offset_end, pnum):
   stacked = np.zeros((shape[0], shape[1], 20))
+  prev_stacked = np.zeros((shape[0], shape[1], 9))
+
+  for i in xrange(9):
+    prev_stacked[:, :, i] = greyscale(imread(frame_paths % (i + offset_start)))
 
   frames_train = lmdb.open(frames_train_path, map_size=int(1e12))
   labels_train = lmdb.open(labels_train_path, map_size=int(1e12))
@@ -147,12 +140,13 @@ def load_single_datum_into_lmdb(frames_train_path, labels_train_path, frames_tes
     labels_test.begin(write=True, buffers=True) as labels_test_writer:
 
     for split in xrange(offset_start, offset_end):
+      stacked[:, :, 10:] = 0
       shifted = split - offset_start
-      frames = frame_paths % split
       db_entry_title = str(split)
-      for i in xrange(1, 11):
-        stacked[:, :, i - 1] = greyscale(imread(frames % i))
-        if i >= split: stacked[:, :, 10 + i - 1] = stacked[:, :, i - 1]
+      stacked[:, :, :9] = prev_stacked
+      stacked[:, :, 9] = greyscale(imread(frame_paths % (split + 9)))
+      prev_stacked = stacked[:, :, 1:10]
+      stacked[:, :, 9 + offsets[shifted]:] = stacked[:, :, offsets[shifted] - 1:10]
       stacked_data = caffe.io.array_to_datum(stacked)
 
       if train_values[shifted]:
@@ -186,9 +180,9 @@ def load_data_into_lmdb(data_source_folder, target_folder):
     train[np.random.randint(0, num_splits, 1000)] = False
     np.savez_compressed(train_test_file, train=train)
 
-  video_title = 'seg-%06d-frame-%%02d.jpg'
+  video_title = 'frame-%06d.jpg'
   frame_paths = os.path.join(data_source_folder, video_title)
-  frame_shape = imread((frame_paths % 1) % 1).shape
+  frame_shape = imread(frame_paths % 1).shape
 
   num_cpus = multiprocessing.cpu_count()
 
@@ -213,5 +207,6 @@ def download_movie():
 
 if __name__ == '__main__':
   # Pipeline: Download movie -> create dataset -> load into lmdb
+  # download_movie()
   # create_movie_dataset(args.video_source, args.target_folder)
   load_data_into_lmdb(args.target_folder, args.target_folder)
