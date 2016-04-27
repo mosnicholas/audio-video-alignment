@@ -4,6 +4,7 @@ import sys
 import csv
 import h5py
 import moviepy
+import os
 
 # Make sure that caffe is on the python path:
 caffe_root = '~/caffe/'  # this file is expected to be in {caffe_root}/examples
@@ -39,7 +40,7 @@ def main():
 						tenBest = tenBest[:-1]
 				if len(tenWorst) < 10 or absDiff > tenWorst[0][0]:
 					tenWorst.append((absDiff, leftFrames, rightFrames, label, predLabel, path))
-					tenWorst = sorted(tenWorst, key=lambdax: x[0])
+					tenWorst = sorted(tenWorst, key=lambda x: x[0])
 					if len(tenWorst) > 10:
 						tenWorst = tenWorst[1:]
 				predLabels.append(predLabel)
@@ -95,3 +96,5 @@ def test_image(left, right):
 	plt.plot(prediction[0])
 	print 'predicted class:', prediction[0].argmax()
 	plt.show()
+
+main()
