@@ -93,6 +93,7 @@ def create_movie_process(video, target_folder, start_i, end_i, first_i, pnum, sa
     if shifted in saved_frames: continue
     video.save_frame(video_path % shifted, i)
     if (shifted % 500 == 0): print '%d frames saved on process %d' % (i - start_i, pnum)
+  print 'process %d completed' % pnum
 
 def create_movie_dataset(movie_path, target_folder):
   if not os.path.isdir(target_folder): os.makedirs(target_folder)
@@ -157,6 +158,8 @@ def load_single_datum_into_lmdb(frames_train_path, labels_train_path, frames_tes
 
       if shifted % 500 == 0:
         print '%s splits processed on process %d' % (shifted, pnum)
+
+  print 'process %d completed' % pnum
 
   frames_train.close()
   labels_train.close()
@@ -235,6 +238,8 @@ def load_data_hdf5_process(frame_paths, target_folder, shape, offsets, offset_st
 
     if shifted % 500 == 0:
       print '%s splits processed on process %d' % (shifted, pnum)
+
+  print 'process %d completed' % pnum
 
 def load_data_into_hdf5(data_source_folder, target_folder):
   offset_file_path = os.path.join(data_source_folder, 'offsets.npz')
