@@ -26,8 +26,8 @@ for i in xrange(4):
       key = str(x)
       arr = np.fromstring(txn.get(key)).reshape(180, 240, 20)
       offset = int(labels_txn.get(key))
-      frames_correct = frames_correct and np.all(arr[:, :, offset:10] == arr[:, :, 10 + offset:])
-      frames_correct = frames_correct and np.all(arr[:, :, 10:9 + offset] == 0)
+      frames_correct = frames_correct and np.all(arr[:, :, offset - 1:10] == arr[:, :, 10:10 + (10 - (offset - 1))])
+      frames_correct = frames_correct and np.all(arr[:, :, 10 + (10 - (offset - 1)):] == 0)
 
 print frames_correct
 
