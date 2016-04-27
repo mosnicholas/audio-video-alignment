@@ -14,7 +14,7 @@ import caffe
 
 # Set the right path to your model definition file, pretrained model weights,
 # and the image you would like to classify.
-MODEL_FILE = '~/audio-video-alignment/left_right_align/siamese_caffenet_deploy.prototxt'
+MODEL_FILE = '/home/ubuntu/audio-video-alignment/left_right_align/siamese_caffenet_deploy.prototxt'
 PRETRAINED = '/mnt/data/snapshots/scn_iter_20000.solverstate'
 DATASET_PATH = '/mnt/data/dataset_prepared'
 EXAMPLES_TXT = os.path.join(DATASET_PATH, 'examples_test.txt')
@@ -27,6 +27,7 @@ def main():
 		tenBest = [] # (absDiff, image1, image2, label, predLabel, path)
 		tenWorst = []
 		for ind, path in enumerate(examples_paths):
+			path = path[0]
 			with h5py.File(path, 'r') as hFile:
 				leftFrames = hFile['left']
 				rightFrames = hFile['right']
