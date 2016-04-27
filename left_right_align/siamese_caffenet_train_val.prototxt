@@ -51,6 +51,7 @@ layer {
     num_output: 96
     kernel_size: 5
     stride: 2
+    group: 5
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -108,6 +109,7 @@ layer {
     num_output: 256
     pad: 2
     kernel_size: 4
+    group: 3
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -325,6 +327,7 @@ layer {
     num_output: 96
     kernel_size: 5
     stride: 2
+    group: 5
     weight_filler {
       type: "xavier"
     }
@@ -381,6 +384,7 @@ layer {
     num_output: 256
     pad: 2
     kernel_size: 4
+    group: 3
     weight_filler {
       type: "xavier"
     }
