@@ -21,7 +21,7 @@ layer {
   bottom: "left"
   top: "conv1"
   convolution_param {
-    num_output: 96
+    num_output: 100
     kernel_size: 5
     stride: 2
     group: 5
@@ -193,7 +193,7 @@ layer {
   bottom: "right"
   top: "conv1_rep"
   convolution_param {
-    num_output: 96
+    num_output: 100
     kernel_size: 5
     stride: 2
     group: 5
