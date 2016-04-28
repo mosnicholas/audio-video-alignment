@@ -131,15 +131,16 @@ def split_video_stride():
   poss_left_frames = []
   poss_right_frames = []
 
-  num_cpus = 1#multiprocessing.cpu_count()
+  num_cpus = 1 #multiprocessing.cpu_coun
+  process_inds_stride(0, 20000)
   frames_per_process = 20000/num_cpus
-  for i in xrange(num_cpus):
+  '''for i in xrange(num_cpus):
     start_ind = i * frames_per_process
     end_ind = 20000 if i == num_cpus - 1 else (i + 1)*frames_per_process
     multiprocessing.Process(
       target=process_inds_stride,
       args=(left_video, right_video, start_ind, end_ind, offsets)
-    ).start()
+    ).start()'''
 
 offsets_recorded = 0
 def record_offsets(start_ind, end_ind, offsets, offsets_to_add):
