@@ -111,7 +111,9 @@ def split_video_stride():
   video = VideoFileClip(args.source_path, audio=False)
   if (args.presentation_movie):
     video = video.subclip((1, 8, 36), (1, 8, 41))
-  video = video.set_fps(1).subclip(1, 20000).resize((128, 96))
+  print("Resizing and trimming source video")
+  video = video.set_fps(1).subclip(1000, 21000).resize((128, 96))
+  print("Generating left and right source videos...")
   if (args.presentation_movie):
     video.write_videofile(os.path.join(args.target_folder, 'pres_video.mp4'), codec='libx264', audio=False)
   framerate = video.fps
@@ -119,8 +121,8 @@ def split_video_stride():
   num_frames = int(video.fps * video.duration)
   left_video = moviepy.video.fx.all.crop(video, x1=0, width=width)
   right_video = moviepy.video.fx.all.crop(video, x1=width + args.middle_gap_pixel_size, width=width)
-  left_video = left_video.set_fps(1).set_duration(num_frames)
-  right_video = right_video.set_fps(1).set_duration(num_frames)
+  left_video = left_video.set_fps(1).set_duration(20000)
+  right_video = right_video.set_fps(1).set_duration(20000)
 
   output_ind = args.output_starting_ind
   file_prefix = "seg"
