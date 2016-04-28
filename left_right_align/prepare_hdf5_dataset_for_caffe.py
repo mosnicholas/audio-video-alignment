@@ -208,12 +208,6 @@ def main():
 	curr_right_frames = np.zeros((29, 96, 64))
 
 	for frame_ind in xrange(args.resume_from, num_segments_out):
-		seg1_ind += 2
-		seg2_ind += 2
-		assert offsets[seg1_ind] == 0
-		assert offsets[seg2_ind] > 0
-		offset_left = randint(0, 1) == 1 # coin flip
-		offset = offsets[seg2_ind]
 
 		left_img = np.zeros((1, 96, 64))
 		left_img[0, :, :] = rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-left.jpeg'.format(frame_ind))))
@@ -234,6 +228,14 @@ def main():
 		h5_location2 = ''
 
 		if frame_ind % 2 == 0:
+
+			seg1_ind += 2
+			seg2_ind += 2
+			assert offsets[seg1_ind] == 0
+			assert offsets[seg2_ind] > 0
+			offset_left = randint(0, 1) == 1 # coin flip
+			offset = offsets[seg2_ind]
+			
 			h5_filename1 = 'seg-{:06d}.h5'.format(seg1_ind)
 			h5_filename2 = 'seg-{:06d}.h5'.format(seg2_ind)
 			h5_location1 = os.path.join(args.target_folder, h5_filename1)
