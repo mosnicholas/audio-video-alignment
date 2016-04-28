@@ -233,8 +233,10 @@ def main():
 			h5_location2 = os.path.join(args.source_folder, h5_filename2)
 
 			stacked_left = np.zeros((1, 10, 96, 64))
-			stacked_left = curr_left_frames[:20:2,:,:]
-			stacked_right = curr_right_frames[:20:2,:,:]
+			stacked_left[0, :, :, :] = curr_left_frames[:20:2,:,:]
+			stacked_right = np.zeros((1, 10, 96, 64))
+			stacked_right[0, :, :, :] = curr_right_frames[:20:2,:,:]
+			stacked_offset = np.zeros((1, 10, 96, 64))
 			stacked_offset = curr_left_frames[offset:20+2*offset:2,:,:] if offset_left else curr_right_frames[offset:20+2*offset:2,:,:]
 			if np.max(curr_left_frames) > 1 or np.max(curr_right_frames) > 1:
 				stacked_left *= 1.0/255
