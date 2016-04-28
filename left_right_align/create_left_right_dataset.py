@@ -132,7 +132,7 @@ def split_video_stride():
   poss_right_frames = []
 
   num_cpus = 1 #multiprocessing.cpu_coun
-  process_inds_stride(0, 20000)
+  process_inds_stride(left_video, right_video, 0, 20000, offsets)
   frames_per_process = 20000/num_cpus
   '''for i in xrange(num_cpus):
     start_ind = i * frames_per_process
