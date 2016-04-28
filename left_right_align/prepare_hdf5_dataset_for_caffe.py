@@ -9,6 +9,7 @@ import h5py
 import numpy as np
 import multiprocessing
 from scipy.ndimage import imread
+from random import randint
 
 parser = argparse.ArgumentParser(
   description='Generate the train and test LMDB for the left / right dataset. \
