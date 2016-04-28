@@ -156,8 +156,8 @@ def main():
 	while os.path.isfile(os.path.join(args.source_folder, 'frame-{:06d}-left.jpeg'.format(num_source_frames))):
 		num_source_frames += 1
 	print 'Counted ' + str(num_source_frames) + ' source segments.'
-	num_source_frames = min(args.num_to_process, num_source_frames) if args.num_to_process else num_source_frames
-	num_segments_out = num_source_frames - 50 # approx for safety
+	num_source_frames = min(args.num_to_process, num_source_frames - 50) if args.num_to_process else num_source_frames - 50 # approx for safety
+	num_segments_out = num_source_frames 
 
 	if not os.path.isdir(args.target_folder):
 		os.mkdir(args.target_folder)
