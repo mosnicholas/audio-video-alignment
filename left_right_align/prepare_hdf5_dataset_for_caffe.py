@@ -214,9 +214,9 @@ def main():
 
 		print np.shape(rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-left.jpeg'.format(frame_ind)))))
 		print np.shape(curr_left_frames)
-		left_img = np.zeros(1, 96, 64)
+		left_img = np.zeros((1, 96, 64))
 		left_img[0, :, :] = rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-left.jpeg'.format(frame_ind))))
-		right_img = np.zeros(1, 96, 64)
+		right_img = np.zeros((1, 96, 64))
 		right_img[0, :, :] = rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-right.jpeg'.format(frame_ind))))
 
 		curr_left_frames = np.concatenate((curr_left_frames, left_img), 0)
