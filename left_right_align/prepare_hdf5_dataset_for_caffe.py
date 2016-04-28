@@ -203,8 +203,8 @@ def main():
 	seg1_ind = 0 # no offset
 	seg2_ind = 1 # offset
 
-	curr_left_frames = np.zeros((29, 64, 96))
-	curr_right_frames = np.zeros((29, 64, 96))
+	curr_left_frames = np.zeros((29, 96, 64))
+	curr_right_frames = np.zeros((29, 96, 64))
 
 	for frame_ind in xrange(args.resume_from, num_segments_out):
 		seg1_ind += 2
@@ -212,8 +212,8 @@ def main():
 		assert offsets[seg1_ind] == 0
 		assert offsets[seg2_ind] > 0
 
-		print np.shape(rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-left.jpeg'.format(frame_ind)))))
-		print np.shape(curr_left_frames)
+		#print np.shape(rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-left.jpeg'.format(frame_ind)))))
+		#print np.shape(curr_left_frames)
 		curr_left_frames = np.concatenate((curr_left_frames, rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-left.jpeg'.format(frame_ind))))), 0)
 		curr_right_frames = np.concatenate((curr_right_frames, rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-right.jpeg'.format(frame_ind))))), 0)
 
@@ -227,7 +227,7 @@ def main():
 			h5_location1 = os.path.join(args.source_folder, h5_filename1)
 			h5_location2 = os.path.join(args.source_folder, h5_filename2)
 
-			stacked_left = np.zeros((1, 10, 64, 96))
+			stacked_left = np.zeros((1, 10, 96, 64))
 			stacked_left = curr_left_frames[:20:2,:,:]
 			stacked_right = curr_right_frames[:20:2,:,:]
 			stacked_offset = curr_left_frames[offset:20+2*offset:2,:,:] if offset_left else curr_right_frames[offset:20+2*offset:2,:,:]
