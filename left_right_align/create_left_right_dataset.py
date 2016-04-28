@@ -111,7 +111,7 @@ def split_video_stride():
   video = VideoFileClip(args.source_path, audio=False)
   if (args.presentation_movie):
     video = video.subclip((1, 8, 36), (1, 8, 41))
-  video = video.resize((128, 96))
+  video = video.set_fps(1).subclip(1, 20000).resize((128, 96))
   if (args.presentation_movie):
     video.write_videofile(os.path.join(args.target_folder, 'pres_video.mp4'), codec='libx264', audio=False)
   framerate = video.fps
