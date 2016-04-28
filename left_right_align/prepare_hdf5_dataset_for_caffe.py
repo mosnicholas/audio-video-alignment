@@ -229,13 +229,11 @@ def main():
 
 		if frame_ind % 2 == 0:
 
-			seg1_ind += 2
-			seg2_ind += 2
 			assert offsets[seg1_ind] == 0
 			assert offsets[seg2_ind] > 0
 			offset_left = randint(0, 1) == 1 # coin flip
 			offset = offsets[seg2_ind]
-			
+
 			h5_filename1 = 'seg-{:06d}.h5'.format(seg1_ind)
 			h5_filename2 = 'seg-{:06d}.h5'.format(seg2_ind)
 			h5_location1 = os.path.join(args.target_folder, h5_filename1)
@@ -294,6 +292,9 @@ def main():
 						f.write(filename_test + '\n')
 				filenames_train = []
 				filenames_test = []
+		
+			seg1_ind += 2
+			seg2_ind += 2
 	with h5py.File(h5_location2, 'r') as f:
 		print 'Final datum written: '
 		print f['left']
