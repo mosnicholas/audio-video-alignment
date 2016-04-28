@@ -108,11 +108,14 @@ def split_video_pres():
 
 def split_video_stride():
   movie_title = os.path.split(args.source_path)[-1]
+  print("Loading video")
   video = VideoFileClip(args.source_path, audio=False)
   if (args.presentation_movie):
     video = video.subclip((1, 8, 36), (1, 8, 41))
   print("Resizing and trimming source video")
-  video = video.set_fps(1).subclip(1000, 21000).resize((128, 96))
+  video_duration_needed = 20000 / video.fps
+  start_time = 1000 / video.fps
+  video = video.subclip(start_time, start_time + video_duration_needed).resize((128, 96))
   print("Generating left and right source videos...")
   if (args.presentation_movie):
     video.write_videofile(os.path.join(args.target_folder, 'pres_video.mp4'), codec='libx264', audio=False)
