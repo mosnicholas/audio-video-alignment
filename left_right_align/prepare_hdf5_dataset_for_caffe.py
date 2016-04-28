@@ -213,6 +213,7 @@ def main():
 		assert offsets[seg1_ind] == 0
 		assert offsets[seg2_ind] > 0
 		offset_left = randint(0, 1) == 1 # coin flip
+		offset = offsets[seg2_ind]
 
 		left_img = np.zeros((1, 96, 64))
 		left_img[0, :, :] = rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-left.jpeg'.format(frame_ind))))
