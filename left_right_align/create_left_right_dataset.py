@@ -131,8 +131,8 @@ def split_video_stride():
   right_video = right_video.set_fps(1).set_duration(20000)
 
   for ind in range(0, 20000):
-    right_video.save_frame(os.path.join(args.target_folder, ('frame-{:02d}-right.jpeg').format(ind)), ind)
-    left_video.save_frame(os.path.join(args.target_folder, ('frame-{:02d}-left.jpeg').format(ind)), ind)
+    right_video.save_frame(os.path.join(args.target_folder, ('frame-{:06d}-right.jpeg').format(ind)), ind)
+    left_video.save_frame(os.path.join(args.target_folder, ('frame-{:06d}-left.jpeg').format(ind)), ind)
     if ind % 100 == 0:
       print("Done with " + str(ind))
   return True
