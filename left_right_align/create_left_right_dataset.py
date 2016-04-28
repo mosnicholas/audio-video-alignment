@@ -144,6 +144,7 @@ def split_video_stride():
 offsets_recorded = 0
 def record_offsets(start_ind, end_ind, offsets, offsets_to_add):
   offsets[start_ind:end_ind] = offsets_to_add
+  global offsets_recorded
   offsets_recorded += 1
   if offsets_recorded == multiprocessing.cpu_count():
     with open(os.path.join(args.target_folder, 'offsets.csv'), 'w') as offset_csv_file:
