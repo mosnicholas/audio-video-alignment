@@ -116,7 +116,7 @@ def split_video_stride():
   if (args.presentation_movie):
     video = video.subclip((1, 8, 36), (1, 8, 41))
   print("Resizing and trimming source video")
-  video_duration_needed = 140 / video.fps
+  video_duration_needed = 20000 / video.fps
   start_time = 1000 / video.fps
   video = video.subclip(start_time, start_time + video_duration_needed).resize((128, 96))
   print("Generating left and right source videos...")
@@ -127,10 +127,10 @@ def split_video_stride():
   num_frames = int(video.fps * video.duration)
   left_video = moviepy.video.fx.all.crop(video, x1=0, width=width)
   right_video = moviepy.video.fx.all.crop(video, x1=width + args.middle_gap_pixel_size, width=width)
-  left_video = left_video.set_fps(1).set_duration(140)
-  right_video = right_video.set_fps(1).set_duration(140)
+  left_video = left_video.set_fps(1).set_duration(20000)
+  right_video = right_video.set_fps(1).set_duration(20000)
 
-  for ind in range(0, 140):
+  for ind in range(0, 20000):
     right_video.save_frame(os.path.join(args.target_folder, ('frame-{:02d}-right.jpeg').format(ind)), ind)
     left_video.save_frame(os.path.join(args.target_folder, ('frame-{:02d}-left.jpeg').format(ind)), ind)
     if ind % 100 == 0:
@@ -139,9 +139,9 @@ def split_video_stride():
 
   output_ind = args.output_starting_ind
   file_prefix = "seg"
-  offsets = np.random.randint(1, 11, 140)
+  offsets = np.random.randint(1, 11, 20000)
   offsets[::2] = 0
-  offset_sets = [{ 'id': '%06d' % output_ind, 'offset_frames': offsets[output_ind] } for output_ind in xrange(140)]
+  offset_sets = [{ 'id': '%06d' % output_ind, 'offset_frames': offsets[output_ind] } for output_ind in xrange(20000)]
 
   with open(os.path.join(args.target_folder, 'offsets.csv'), 'w') as offset_csv_file:
     w = csv.DictWriter(offset_csv_file, fieldnames=['id', 'offset_frames'])
@@ -155,11 +155,11 @@ def split_video_stride():
   poss_right_frames = []
 
   num_cpus = 1 #multiprocessing.cpu_coun
-  process_inds_stride(left_video, right_video, 0, 140, offsets)
-  frames_per_process = 140/num_cpus
+  process_inds_stride(left_video, right_video, 0, 20000, offsets)
+  frames_per_process = 20000/num_cpus
   '''for i in xrange(num_cpus):
     start_ind = i * frames_per_process
-    end_ind = 140 if i == num_cpus - 1 else (i + 1)*frames_per_process
+    end_ind = 20000 if i == num_cpus - 1 else (i + 1)*frames_per_process
     multiprocessing.Process(
       target=process_inds_stride,
       args=(left_video, right_video, start_ind, end_ind, offsets)
@@ -213,7 +213,7 @@ def process_inds_stride(left_video, right_video, start_ind, end_ind, full_offset
   #  offsets.append({ 'id': '{:06d}'.format(output_ind), 'offset_frames': offset })
     if (ind % 10 == 0):
       #print('Finished processing {:d} outputs.'.format(output_ind-1))
-      print('At video frame ' + str(ind) + ' of ' + str(140))
+      print('At video frame ' + str(ind) + ' of ' + str(20000))
   #record_offsets(start_ind, end_ind, full_offsets, offsets)
   #with open(os.path.join(args.target_folder, 'offsets.csv'), 'w') as offset_csv_file:
   #  w = csv.DictWriter(offset_csv_file, fieldnames=['id', 'offset_frames'])
