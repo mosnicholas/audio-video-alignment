@@ -189,7 +189,7 @@ def process_inds_stride(left_video, right_video, start_ind, end_ind, full_offset
         left_video.save_frame(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-left.jpeg').format(output_ind, arr_ind)), frame_ind)
     output_ind += 1
     offsets.append({ 'id': '{:06d}'.format(output_ind), 'offset_frames': offset })
-    if (ind+1 % 40 == 0):
+    if (ind % 10 == 0):
       #print('Finished processing {:d} outputs.'.format(output_ind-1))
       print('At video frame ' + str(ind) + ' of ' + str(20000))
   record_offsets(start_ind, end_ind, full_offsets, offsets)
