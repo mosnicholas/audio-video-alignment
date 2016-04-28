@@ -158,7 +158,7 @@ def process_inds_stride(left_video, right_video, start_ind, end_ind, full_offset
   offsets = []
   output_ind = start_ind
 
-  for ind in range(start_ind, end_ind)[::3]:
+  for ind in range(start_ind, end_ind)[::2]:
 
     offset = randint(1,10)
     offset_left = randint(0, 1) == 1 # coin flip
