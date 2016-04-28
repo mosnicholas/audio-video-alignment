@@ -233,9 +233,9 @@ def main():
 			h5_location2 = os.path.join(args.source_folder, h5_filename2)
 
 			stacked_left = np.zeros((1, 10, 96, 64))
-			np.shape(curr_left_frames)
-			np.shape(curr_left_frames[:20:2,:,:])
-			np.shape(stacked_left[0, :, :, :])
+			print(np.shape(curr_left_frames))
+			print(np.shape(curr_left_frames[:20:2,:,:]))
+			print(np.shape(stacked_left[0, :, :, :]))
 			stacked_left[0, :, :, :] = curr_left_frames[:20:2,:,:]
 			stacked_right = np.zeros((1, 10, 96, 64))
 			stacked_right[0, :, :, :] = curr_right_frames[:20:2,:,:]
