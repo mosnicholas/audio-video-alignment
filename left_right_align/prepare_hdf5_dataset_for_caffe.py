@@ -222,6 +222,7 @@ def main():
 		print np.shape(curr_left_frames)
 		curr_left_frames = np.concatenate((curr_left_frames, left_img), 0)
 		curr_right_frames = np.concatenate((curr_right_frames, right_img), 0)
+		print(np.shape(curr_left_frames))
 
 		if np.size(curr_left_frames, 0) > 29:
 			curr_left_frames = curr_left_frames[1,:,:]
@@ -233,6 +234,7 @@ def main():
 			h5_location1 = os.path.join(args.source_folder, h5_filename1)
 			h5_location2 = os.path.join(args.source_folder, h5_filename2)
 
+			print(np.shape(curr_left_frames))
 			stacked_left = np.zeros((1, 10, 96, 64))
 			print(np.shape(curr_left_frames))
 			print(np.shape(curr_left_frames[:20:2,:,:]))
