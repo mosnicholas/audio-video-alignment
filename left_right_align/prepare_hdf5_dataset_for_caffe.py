@@ -154,7 +154,7 @@ def main():
 	num_source_frames = 1
 	while os.path.isfile(os.path.join(args.source_folder, 'frame-{:06d}-left.jpeg'.format(num_source_frames))):
 		num_source_frames += 1
-	print 'Processing ' + str(num_source_frames) + ' segments.'
+	print 'Counted ' + str(num_source_frames) + ' source segments.'
 	num_source_frames = min(args.num_to_process, num_source_frames) if args.num_to_process else num_source_frames
 	num_segments_out = num_source_frames - 50 # approx for safety
 
@@ -183,7 +183,7 @@ def main():
 		offsets[::2] = 0
 		with open(os.path.join(args.target_folder, 'offsets.csv'), 'w') as offsets_csv:
 			w = csv.writer(offsets_csv)
-			w.writerows(offsets)
+			w.writerows(offsets.tolist())
 
 	in_train = np.array([True] * num_source_frames)
 	in_train[test_inds] = False
