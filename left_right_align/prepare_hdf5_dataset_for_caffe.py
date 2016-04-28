@@ -95,7 +95,6 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 	except OSError:
 		pass
 
-	full_file_path = ''
 
 	for segment_ind in range(seg_start_ind, seg_end_ind):
 		h5_filename = 'seg-{:06d}-image.h5'.format(segment_ind + 1)
@@ -142,11 +141,12 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 					f.write(filename_test + '\n')
 			filenames_train = []
 			filenames_test = []
-	with h5py.File(full_file_path, 'r') as f:
-		print 'Final datum written: '
-		print f['left']
-		print f['right']
-		print f['label']
+			with h5py.File(full_file_path, 'r') as f:
+				print 'Final datum written: '
+				print f['left']
+				print f['right']
+				print f['label']
+
 
 
 
@@ -290,7 +290,7 @@ def main():
 						f.write(filename_test + '\n')
 				filenames_train = []
 				filenames_test = []
-			with h5py.File(full_file_path, 'r') as f:
+			with h5py.File(h5_location2, 'r') as f:
 				print 'Final datum written: '
 				print f['left']
 				print f['right']
