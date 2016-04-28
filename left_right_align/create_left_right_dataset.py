@@ -130,9 +130,24 @@ def split_video_stride():
   left_video = left_video.set_fps(1).set_duration(140)
   right_video = right_video.set_fps(1).set_duration(140)
 
+  for ind in range(0, 140):
+    right_video.save_frame(os.path.join(args.target_folder, ('frame-{:02d}-right.jpeg').format(ind)), ind)
+    left_video.save_frame(os.path.join(args.target_folder, ('frame-{:02d}-left.jpeg').format(ind)), ind)
+    if ind % 100 == 0:
+      print("Done with " + str(ind))
+  return True
+
   output_ind = args.output_starting_ind
   file_prefix = "seg"
-  offsets = [0]*140
+  offsets = np.random.randint(1, 11, 140)
+  offsets[::2] = 0
+  offset_sets = [{ 'id': '%06d' % output_ind, 'offset_frames': offsets[output_ind] } for output_ind in xrange(140)]
+
+  with open(os.path.join(args.target_folder, 'offsets.csv'), 'w') as offset_csv_file:
+    w = csv.DictWriter(offset_csv_file, fieldnames=['id', 'offset_frames'])
+    w.writeheader()
+    w.writerows(offset_sets)
+    print('Wrote offsets.')
 
   print "Using stride 2..."
   stride = 3
@@ -167,9 +182,11 @@ def process_inds_stride(left_video, right_video, start_ind, end_ind, full_offset
   offsets = []
   output_ind = start_ind
 
-  for ind in range(start_ind, end_ind)[::2]:
-
-    offset = randint(1,10)
+  
+'''
+    offset = full_offsets[ind+1]
+    assert full_offsets[ind] == 0, "Offset should be zero."
+    assert offset > 0
     offset_left = randint(0, 1) == 1 # coin flip
 
     frames_out = range(ind, ind + 19)[::2]
@@ -177,16 +194,11 @@ def process_inds_stride(left_video, right_video, start_ind, end_ind, full_offset
     #left_frames_out = poss_left_frames[0:28:3]
     #offset_frames_out = poss_left_frames[offset:28+offset:3] if offset_left else poss_right_frames[offset:28+offset:3]
 
-    output_ind += 1
-
     for arr_ind, frame_ind in enumerate(frames_out):
       #misc.toimage(right_frame, cmin=np.min(right_frame), cmax=np.max(right_frame)).save(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, frame_ind)))
-      right_video.save_frame(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, arr_ind)), frame_ind)
-      left_video.save_frame(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-left.jpeg').format(output_ind, arr_ind)), frame_ind)
 
-    offsets.append({ 'id': '%06d' % output_ind, 'offset_frames': 0 })
+    #offsets.append({ 'id': '%06d' % output_ind, 'offset_frames': 0 })
     output_ind += 1
-
     if (offset_left):
       for arr_ind, frame_ind in enumerate(frames_out):
         right_video.save_frame(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, arr_ind)), frame_ind)
@@ -198,18 +210,18 @@ def process_inds_stride(left_video, right_video, start_ind, end_ind, full_offset
       for arr_ind, frame_ind in enumerate(frames_out):
         left_video.save_frame(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-left.jpeg').format(output_ind, arr_ind)), frame_ind)
     output_ind += 1
-    offsets.append({ 'id': '{:06d}'.format(output_ind), 'offset_frames': offset })
+  #  offsets.append({ 'id': '{:06d}'.format(output_ind), 'offset_frames': offset })
     if (ind % 10 == 0):
       #print('Finished processing {:d} outputs.'.format(output_ind-1))
       print('At video frame ' + str(ind) + ' of ' + str(140))
-  record_offsets(start_ind, end_ind, full_offsets, offsets)
-  with open(os.path.join(args.target_folder, 'offsets.csv'), 'w') as offset_csv_file:
-    w = csv.DictWriter(offset_csv_file, fieldnames=['id', 'offset_frames'])
-    w.writeheader()
-    w.writerows(offsets)
-    print('Wrote offsets.')
+  #record_offsets(start_ind, end_ind, full_offsets, offsets)
+  #with open(os.path.join(args.target_folder, 'offsets.csv'), 'w') as offset_csv_file:
+  #  w = csv.DictWriter(offset_csv_file, fieldnames=['id', 'offset_frames'])
+  #  w.writeheader()
+  #  w.writerows(offsets)
+  #  print('Wrote offsets.')
   return True
-
+'''
 def split_video():
 
   movie_title = os.path.split(args.source_path)[-1]
