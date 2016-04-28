@@ -292,9 +292,9 @@ def main():
 						f.write(filename_test + '\n')
 				filenames_train = []
 				filenames_test = []
-		with h5py.File(h5_location2, 'r') as f:
-			print 'Final datum written: '
-			print f['left']
-			print f['right']
-			print f['label']
+	with h5py.File(h5_location2, 'r') as f:
+		print 'Final datum written: '
+		print f['left']
+		print f['right']
+		print f['label']
 main()
