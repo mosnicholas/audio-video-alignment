@@ -231,11 +231,13 @@ def main():
 			curr_left_frames = curr_left_frames[1:,:,:]
 			curr_right_frames = curr_right_frames[1:,:,:]
 
+		h5_location2 = ''
+
 		if frame_ind % 2 == 0:
 			h5_filename1 = 'seg-{:06d}.h5'.format(seg1_ind)
 			h5_filename2 = 'seg-{:06d}.h5'.format(seg2_ind)
-			h5_location1 = os.path.join(args.source_folder, h5_filename1)
-			h5_location2 = os.path.join(args.source_folder, h5_filename2)
+			h5_location1 = os.path.join(args.target_folder, h5_filename1)
+			h5_location2 = os.path.join(args.target_folder, h5_filename2)
 
 			#print(np.shape(curr_left_frames))
 			stacked_left = np.zeros((1, 10, 96, 64))
@@ -290,9 +292,9 @@ def main():
 						f.write(filename_test + '\n')
 				filenames_train = []
 				filenames_test = []
-			with h5py.File(h5_location2, 'r') as f:
-				print 'Final datum written: '
-				print f['left']
-				print f['right']
-				print f['label']
+		with h5py.File(h5_location2, 'r') as f:
+			print 'Final datum written: '
+			print f['left']
+			print f['right']
+			print f['label']
 main()
