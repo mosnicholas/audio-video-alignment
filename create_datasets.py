@@ -106,7 +106,7 @@ def create_movie_dataset(movie_path, target_folder):
   saved_frames = set(map(lambda x: int(x) if x else 0, map(lambda f: ''.join(x for x in f if x.isdigit()), os.listdir(target_folder))))
   num_done = len(saved_frames)
   if num_done == 0:
-    offsets = np.random.randint(2, 10, num_frames - first_frame - 9)
+    offsets = np.random.randint(0, 10, num_frames - first_frame - 9)/10.0
     offset_file = os.path.join(target_folder, 'offsets.npz')
     np.savez_compressed(offset_file, offsets=offsets)
 
@@ -201,32 +201,32 @@ def load_data_into_lmdb(data_source_folder, target_folder):
     )).start()
 
 def load_data_hdf5_process(frame_paths, target_folder, shape, offsets, offset_start, offset_end, saved_files, pnum):
-  stacked = np.zeros((shape[0], shape[1], 20))
-  prev_stacked = np.zeros((shape[0], shape[1], 9))
+  stacked = np.zeros((1, 20, shape[0], shape[1]))
+  prev_stacked = np.zeros((9, shape[0], shape[1]))
 
   for i in xrange(9):
-    prev_stacked[:, :, i] = greyscale(imread(frame_paths % (i + offset_start)))
-    prev_stacked[:, :, i] = prev_stacked[:, :, i]/prev_stacked[:, :, i].max()
+    prev_stacked[i, :, :] = greyscale(imread(frame_paths % (i + offset_start)))
+    prev_stacked[i, :, :] = prev_stacked[i, :, :]/prev_stacked[i, :, :].max()
 
   for split in xrange(offset_start, offset_end):
     if split in saved_files: continue
     shifted = split - offset_start
-    stacked[:, :, 10:] = 0
-    stacked[:, :, :9] = prev_stacked
-    stacked[:, :, 9] = greyscale(imread(frame_paths % (split + 9)))
-    stacked[:, :, 9] = stacked[:, :, 9]/stacked[:, :, 9].max()
-    prev_stacked = stacked[:, :, 1:10]
-    stacked[:, :, 10:] = stacked[:, :, offsets[shifted] - 1:9 + offsets[shifted]]
+    stacked[0, 10:, :, :] = 0
+    stacked[0, :9, :, :] = prev_stacked
+    stacked[0, 9, :, :] = greyscale(imread(frame_paths % (split + 9)))
+    stacked[0, 9, :, :] = stacked[0, 9, :, :]/stacked[0, 9, :, :].max()
+    prev_stacked = stacked[0, 1:10, :, :]
+    stacked[0, 10:, :, :] = stacked[0, offsets[shifted] - 1:9 + offsets[shifted], :, :]
 
     outfile = target_folder % split
 
     with h5py.File(outfile, 'w') as f:
       f.create_dataset(
-        'left', data=stacked[:, :, :10],
+        'left', data=stacked[:, :10, :, :],
         compression='gzip', compression_opts=1
       )
       f.create_dataset(
-        'right', data=stacked[:, :, 10:],
+        'right', data=stacked[:, 10:, :, :],
         compression='gzip', compression_opts=1
       )
       label = np.zeros((1, 1, 1, 1))
@@ -247,8 +247,7 @@ def load_data_into_hdf5(data_source_folder, target_folder):
   train_test_file = os.path.join(target_folder, 'train_test_indices.npz')
   training_examples = os.path.join(target_folder, 'training_examples.txt')
   test_examples =  os.path.join(target_folder, 'test_examples.txt')
-  h5_titles = 'frame-%06d.h5'
-  h5_output_dir = os.path.join(target_folder, h5_titles)
+  h5_output_dir = os.path.join(target_folder, 'frame-%06d.h5')
 
   offsets = np.load(offset_file_path)['offsets']
   num_splits = len(offsets)
@@ -260,8 +259,8 @@ def load_data_into_hdf5(data_source_folder, target_folder):
     train = np.ones((num_splits), dtype=bool)
     train[np.random.randint(0, num_splits, int(num_splits * 0.2))] = False
     np.savez_compressed(train_test_file, train=train)
-    np.savetxt(training_examples, map(lambda x: h5_titles % x, np.where(train==True)[0]), fmt="%s")
-    np.savetxt(test_examples, map(lambda x: h5_titles % x, np.where(train==False)[0]), fmt="%s")
+    np.savetxt(training_examples, map(lambda x: h5_output_dir % x, np.where(train==True)[0]), fmt="%s")
+    np.savetxt(test_examples, map(lambda x: h5_output_dir % x, np.where(train==False)[0]), fmt="%s")
 
   video_title = 'frame-%06d.jpg'
   frame_paths = os.path.join(data_source_folder, video_title)
