@@ -132,7 +132,7 @@ def split_video_stride():
   poss_right_frames = []
 
   num_cpus = multiprocessing.cpu_count()
-  frames_per_process = 20000 / num_cpus
+  frames_per_process = 20000/num_cpus
   for i in xrange(num_cpus):
     start_ind = i * frames_per_process
     end_ind = num_frames if i == num_cpus - 1 else (i + 1)*frames_per_process
@@ -154,42 +154,43 @@ def record_offsets(start_ind, end_ind, offsets, offsets_to_add):
 def process_inds_stride(left_video, right_video, start_ind, end_ind, full_offsets):
   file_prefix = 'seg'
   offsets = []
-  output_ind = 1
+  output_ind = start_ind
 
-  for ind in xrange(start_ind, end_ind):
+  for ind in range(start_ind, end_ind)[::3]:
 
-    if ind % 4 == 0:
-      offset = randint(1,10)
-      offset_left = randint(0, 1) == 1 # coin flip
+    offset = randint(1,10)
+    offset_left = randint(0, 1) == 1 # coin flip
 
-      frames_out = range(ind, ind + 28)[::3]
-      offset_frames_out = range(ind + offset, ind + offset + 28)[::3]
-      #left_frames_out = poss_left_frames[0:28:3]
-      #offset_frames_out = poss_left_frames[offset:28+offset:3] if offset_left else poss_right_frames[offset:28+offset:3]
+    frames_out = range(ind, ind + 19)[::2]
+    offset_frames_out = range(ind + offset, ind + offset + 19)[::2]
+    #left_frames_out = poss_left_frames[0:28:3]
+    #offset_frames_out = poss_left_frames[offset:28+offset:3] if offset_left else poss_right_frames[offset:28+offset:3]
 
+    output_ind += 1
+
+    for arr_ind, frame_ind in enumerate(frames_out):
+      #misc.toimage(right_frame, cmin=np.min(right_frame), cmax=np.max(right_frame)).save(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, frame_ind)))
+      right_video.save_frame(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, arr_ind)), frame_ind)
+      left_video.save_frame(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-left.jpeg').format(output_ind, arr_ind)), frame_ind)
+
+    offsets.append({ 'id': '%06d' % output_ind, 'offset_frames': 0 })
+    output_ind += 1
+
+    if (offset_left):
       for arr_ind, frame_ind in enumerate(frames_out):
-        #misc.toimage(right_frame, cmin=np.min(right_frame), cmax=np.max(right_frame)).save(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, frame_ind)))
         right_video.save_frame(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, arr_ind)), frame_ind)
+      for arr_ind, frame_ind in enumerate(offset_frames_out):
         left_video.save_frame(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-left.jpeg').format(output_ind, arr_ind)), frame_ind)
-
-      offsets.append({ 'id': '%06d' % output_ind, 'offset_frames': 0 })
-      output_ind += 1
-
-      if (offset_left):
-        for arr_ind, frame_ind in enumerate(frames_out):
-          right_video.save_frame(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, arr_ind)), frame_ind)
-        for arr_ind, frame_ind in enumerate(offset_frames_out):
-          left_video.save_frame(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-left.jpeg').format(output_ind, arr_ind)), frame_ind)
-      else:
-        for arr_ind, frame_ind in enumerate(offset_frames_out):
-          right_video.save_frame(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, arr_ind)), frame_ind)
-        for arr_ind, frame_ind in enumerate(frames_out):
-          left_video.save_frame(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-left.jpeg').format(output_ind, arr_ind)), frame_ind)
-      output_ind += 1
-      offsets.append({ 'id': '{:06d}'.format(output_ind), 'offset_frames': offset })
-      if (ind % 40 == 0):
-        #print('Finished processing {:d} outputs.'.format(output_ind-1))
-        print('At video frame ' + str(ind) + ' of ' + str(20000))
+    else:
+      for arr_ind, frame_ind in enumerate(offset_frames_out):
+        right_video.save_frame(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, arr_ind)), frame_ind)
+      for arr_ind, frame_ind in enumerate(frames_out):
+        left_video.save_frame(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-left.jpeg').format(output_ind, arr_ind)), frame_ind)
+    output_ind += 1
+    offsets.append({ 'id': '{:06d}'.format(output_ind), 'offset_frames': offset })
+    if (ind % 40 == 0):
+      #print('Finished processing {:d} outputs.'.format(output_ind-1))
+      print('At video frame ' + str(ind) + ' of ' + str(20000))
   record_offsets(start_ind, end_ind, full_offsets, offsets)
   return True
 
