@@ -214,8 +214,13 @@ def main():
 
 		print np.shape(rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-left.jpeg'.format(frame_ind)))))
 		print np.shape(curr_left_frames)
-		curr_left_frames = np.concatenate((curr_left_frames, rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-left.jpeg'.format(frame_ind))))), 0)
-		curr_right_frames = np.concatenate((curr_right_frames, rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-right.jpeg'.format(frame_ind))))), 0)
+		left_img = np.zeros(1, 96, 64)
+		left_img[0, :, :] = rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-left.jpeg'.format(frame_ind))))
+		right_img = np.zeros(1, 96, 64)
+		right_img[0, :, :] = rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-right.jpeg'.format(frame_ind))))
+
+		curr_left_frames = np.concatenate((curr_left_frames, left_img), 0)
+		curr_right_frames = np.concatenate((curr_right_frames, right_img), 0)
 
 		if np.size(curr_left_frames, 0) > 29:
 			curr_left_frames = curr_left_frames[1,:,:]
