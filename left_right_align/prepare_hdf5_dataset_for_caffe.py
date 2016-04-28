@@ -7,7 +7,7 @@ import csv
 import caffe
 import h5py
 import numpy as np
-#import multiprocessing
+import multiprocessing
 from scipy.ndimage import imread
 
 parser = argparse.ArgumentParser(
@@ -165,7 +165,7 @@ def main():
 
 	test_inds_csv_path = os.path.join(args.target_folder, 'test_inds.csv')
 	if (args.resume_from):
-		with open(os.path.join(target_folder, 'offsets.csv'), 'rb') as offsets_csv:
+		with open(os.path.join(args.target_folder, 'offsets.csv'), 'rb') as offsets_csv:
 			offsets_reader = csv.reader(offsets_csv, delimiter=',')
 			offsets = [row[0] for row in offsets_reader]
 			if args.num_to_process:
@@ -181,7 +181,7 @@ def main():
 			w.writerows(test_inds_to_write)
 		offsets = np.random.randint(1, 11, num_segments_out)
 		offsets[::2] = 0
-		with open(os.path.join(target_folder, 'offsets.csv'), 'w') as offsets_csv:
+		with open(os.path.join(args.target_folder, 'offsets.csv'), 'w') as offsets_csv:
 			w = csv.writer(offsets_csv)
 			w.writerows(offsets)
 
@@ -263,7 +263,6 @@ def main():
 				filenames_train.append(h5_location2)
 			else:
 				filenames_test.append(h5_location2)
-
 
 			if seg1_ind % 100 == 0 or seg2_ind % 100 == 0 or frame_ind == num_segments_out - 1:
 				print str(seg2_ind) + ' segments processed...'
