@@ -212,8 +212,8 @@ def main():
 		assert offsets[seg1_ind] == 0
 		assert offsets[seg2_ind] > 0
 
-		#print np.shape(rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-left.jpeg'.format(frame_ind)))))
-		#print np.shape(curr_left_frames)
+		print np.shape(rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-left.jpeg'.format(frame_ind)))))
+		print np.shape(curr_left_frames)
 		curr_left_frames = np.concatenate((curr_left_frames, rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-left.jpeg'.format(frame_ind))))), 0)
 		curr_right_frames = np.concatenate((curr_right_frames, rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-right.jpeg'.format(frame_ind))))), 0)
 
