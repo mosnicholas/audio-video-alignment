@@ -654,7 +654,7 @@ layer {
 
 layer {
   name: "loss"
-  type: "SigmoidCrossEntropyLoss"
+  type: "EuclideanLoss"
   bottom: "fc8"
   bottom: "label"
   top: "loss"
