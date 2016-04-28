@@ -7,7 +7,7 @@ import csv
 import caffe
 import h5py
 import numpy as np
-import multiprocessing
+#import multiprocessing
 from scipy.ndimage import imread
 
 parser = argparse.ArgumentParser(
@@ -97,9 +97,9 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 	full_file_path = ''
 
 	for segment_ind in range(seg_start_ind, seg_end_ind):
-		image_filename = 'seg-{:06d}-image.h5'.format(segment_ind + 1)
+		h5_filename = 'seg-{:06d}-image.h5'.format(segment_ind + 1)
 		#label_filename = 'seg-{:06d}-label.h5'.format(segment_ind + 1)
-		path_filename_base = os.path.join(args.source_folder, image_filename)
+		path_filename_base = os.path.join(args.source_folder, h5_filename)
 		stacked_left = np.zeros((1, 10, np.size(sample_frame, 0), np.size(sample_frame, 1)))
 		stacked_right = np.zeros((1, 10, np.size(sample_frame, 0), np.size(sample_frame, 1)))
 		for frame_ind in range(0, 10):
@@ -109,7 +109,7 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 		if stacked_left.max() > 1 and stacked_right > 1:
 			stacked_left = .0039216 * stacked_left # Div by 255
 			stacked_right = .0039216 * stacked_right
-		full_file_path = os.path.join(args.target_folder, image_filename)
+		full_file_path = os.path.join(args.target_folder, h5_filename)
 		if in_train[segment_ind]:
 			with h5py.File(full_file_path, 'w') as f:
 				f['left'] = stacked_left
@@ -150,39 +150,134 @@ def process_inds(seg_start_ind, seg_end_ind, process_ind, in_train, offsets):
 
 
 def main():
-	offsets = read_offsets('offsets.csv')
 	args.num_to_process = int(args.num_to_process)
-	num_segments = 1
-	while os.path.isfile(os.path.join(args.source_folder, 'seg-{:06d}-frame-00-left.jpeg'.format(num_segments))):
-		num_segments += 1
-	print 'Processing ' + str(num_segments) + ' segments.'
-	num_segments = min(args.num_to_process, num_segments) if args.num_to_process else num_segments
+	num_source_frames = 1
+	while os.path.isfile(os.path.join(args.source_folder, 'frame-{:06d}-left.jpeg'.format(num_source_frames))):
+		num_source_frames += 1
+	print 'Processing ' + str(num_source_frames) + ' segments.'
+	num_source_frames = min(args.num_to_process, num_source_frames) if args.num_to_process else num_source_frames
+	num_segments_out = num_source_frames - 50 # approx for safety
 
 	if not os.path.isdir(args.target_folder):
 		os.mkdir(args.target_folder)
 
-	segment_inds = range(num_segments)
+	segment_inds = range(num_source_frames)
 
 	test_inds_csv_path = os.path.join(args.target_folder, 'test_inds.csv')
 	if (args.resume_from):
-		with open(test_inds_csv_path, 'rb') as test_inds_csv:
+		with open(os.path.join(target_folder, 'offsets.csv'), 'rb') as offsets_csv:
+			offsets_reader = csv.reader(offsets_csv, delimiter=',')
+			offsets = [row[0] for row in offsets_reader]
+			if args.num_to_process:
+				offsets = offsets[:args.num_to_process]
+		with open('test_inds_csv_path', 'rb') as test_inds_csv:
 			test_inds_reader = csv.reader(test_inds_csv, delimiter=',')
 			test_inds = [row[0] for row in test_inds_reader]
 	else:
-		test_inds = random.sample(segment_inds, num_segments/10)
+		test_inds = random.sample(segment_inds, num_source_frames/10)
 		with open(test_inds_csv_path, 'w') as test_inds_csv:
 			w = csv.writer(test_inds_csv)
 			test_inds_to_write = [[ind] for ind in test_inds]
 			w.writerows(test_inds_to_write)
+		offsets = np.random.randint(1, 11, num_segments_out)
+		offsets[::2] = 0
+		with open(os.path.join(target_folder, 'offsets.csv'), 'w') as offsets_csv:
+			w = csv.writer(offsets_csv)
+			w.writerows(offsets)
 
-	in_train = np.array([True] * num_segments)
+	in_train = np.array([True] * num_source_frames)
 	in_train[test_inds] = False
 
-	if args.resume_from:
-		offsets = offsets[args.resume_from:]
-	elif args.num_to_process:
-		offsets = offsets[:args.num_to_process]
+	# Setup list of h5 filenames
+	filenames_train = []
+	filenames_test = []
+	filenames_train_path = os.path.join(args.target_folder, 'examples_train.txt')
+	filenames_test_path = os.path.join(args.target_folder, 'examples_test.txt')
+	try:
+		os.remove(filenames_train_path)
+		os.remove(filenames_test_path)
+	except OSError:
+		pass
 
-	process_inds(0, len(offsets), 0, in_train, offsets)
+	sample_frame = np.array(imread(os.path.join(args.source_folder, 'seg-000001-frame-00-right.jpeg')))
+	full_file_path = ''
 
+	seg1_ind = 0 # no offset
+	seg2_ind = 1 # offset
+
+	curr_left_frames = np.zeros((29, 64, 96))
+	curr_right_frames = np.zeros((29, 64, 96))
+
+	for frame_ind in xrange(args.resume_from, num_segments_out):
+		seg1_ind += 2
+		seg2_ind += 2
+		assert offsets[seg1_ind] == 0
+		assert offsets[seg2_ind] > 0
+
+		curr_left_frames = np.concatenate(curr_left_frames, rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-left.jpeg'.format(frame_ind)))), 0)
+		curr_right_frames = np.concatenate(curr_right_frames, rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-right.jpeg'.format(frame_ind)))), 0)
+
+		if np.size(curr_left_frames, 0) > 29:
+			curr_left_frames = curr_left_frames[1,:,:]
+			curr_right_frames = curr_right_frames[1,:,:]
+
+		if frame_ind % 2 == 0:
+			h5_filename1 = 'seg-{:06d}.h5'.format(seg1_ind)
+			h5_filename2 = 'seg-{:06d}.h5'.format(seg2_ind)
+			h5_location1 = os.path.join(args.source_folder, h5_filename1)
+			h5_location2 = os.path.join(args.source_folder, h5_filename2)
+
+			stacked_left = np.zeros((1, 10, 64, 96))
+			stacked_left = curr_left_frames[:20:2,:,:]
+			stacked_right = curr_right_frames[:20:2,:,:]
+			stacked_offset = curr_left_frames[offset:20+2*offset:2,:,:] if offset_left else curr_right_frames[offset:20+2*offset:2,:,:]
+			if np.max(curr_left_frames) > 1 or np.max(curr_right_frames) > 1:
+				stacked_left *= 1.0/255
+				stacked_right *= 1.0/255
+				stacked_offset *= 1.0/255
+
+			with h5py.File(h5_location1, 'w') as f:
+				f['left'] = stacked_left
+				f['right'] = stacked_right
+				label_mat = np.zeros((1, 1, 1, 1))
+				label_mat[0, 0, 0, 0] = offsets[seg1_ind]
+				f['label'] = label_mat
+
+			if in_train[seg1_ind]:
+				filenames_train.append(h5_location1)
+			else:
+				filenames_test.append(h5_location1)
+
+			with h5py.File(h5_location2, 'w') as f:
+				if offset_left:
+					f['left'] = stacked_offset
+					f['right'] = stacked_right
+				else:
+					f['left'] = stacked_left
+					f['right'] = stacked_offset
+				label_mat = np.zeros((1, 1, 1, 1))
+				label_mat[0, 0, 0, 0] = offsets[seg2_ind]
+				f['label'] = label_mat
+
+			if in_train[seg2_ind]:
+				filenames_train.append(h5_location2)
+			else:
+				filenames_test.append(h5_location2)
+
+
+			if seg1_ind % 100 == 0 or seg2_ind % 100 == 0 or frame_ind == num_segments_out - 1:
+				print str(seg2_ind) + ' segments processed...'
+				with open(filenames_train_path, 'a') as f:
+					for filename_train in filenames_train:
+						f.write(filename_train + '\n')
+				with open(filenames_test_path, 'a') as f:
+					for filename_test in filenames_test:
+						f.write(filename_test + '\n')
+				filenames_train = []
+				filenames_test = []
+			with h5py.File(full_file_path, 'r') as f:
+				print 'Final datum written: '
+				print f['left']
+				print f['right']
+				print f['label']
 main()
