@@ -131,7 +131,7 @@ def split_video_stride():
   poss_left_frames = []
   poss_right_frames = []
 
-  num_cpus = multiprocessing.cpu_count()
+  num_cpus = 1#multiprocessing.cpu_count()
   frames_per_process = 20000/num_cpus
   for i in xrange(num_cpus):
     start_ind = i * frames_per_process
@@ -194,6 +194,10 @@ def process_inds_stride(left_video, right_video, start_ind, end_ind, full_offset
       #print('Finished processing {:d} outputs.'.format(output_ind-1))
       print('At video frame ' + str(ind) + ' of ' + str(20000))
   record_offsets(start_ind, end_ind, full_offsets, offsets)
+  with open(os.path.join(args.target_folder, 'offsets.csv'), 'w') as offset_csv_file:
+    w = csv.DictWriter(offset_csv_file, fieldnames=['id', 'offset_frames'])
+    w.writeheader()
+    w.writerows(offsets)
   return True
 
 def split_video():
