@@ -1,17 +1,19 @@
 name: "siamese_caffenet_deploy"
-#layer {
+
 input: "left"
-input_shape: { dim: 1, dim: 10, dim: 96, dim: 64 }
+input_shape: {
+  dim: 1
+  dim: 10
+  dim: 96
+  dim: 64
+}
 input: "right"
-input_shape: { dim: 1, dim: 10, dim: 96, dim: 64 }
-#  name: "pair_data"
-#  type: "Data"
-#  top: "left"
-#  top: "right"
-#  input_param {
-#    shape: { dim: 1 dim: 10 dim: 96 dim: 64 } # label, channel, width, height
-#  }
-#}
+input_shape: {
+  dim: 1
+  dim: 10
+  dim: 96
+  dim: 64
+}
 
 # CaffeNet
 
@@ -24,7 +26,6 @@ layer {
     num_output: 100
     kernel_size: 5
     stride: 2
-    group: 5
   }
 }
 layer {
@@ -196,7 +197,6 @@ layer {
     num_output: 100
     kernel_size: 5
     stride: 2
-    group: 5
   }
 }
 layer {
@@ -402,8 +402,8 @@ layer {
 }
 
 layer {
-  name: "out"
-  type: "Sigmoid"
+  name: "activations"
+  type: "Softmax"
   bottom: "fc8"
-  top: "out"
+  top: "activations"
 }

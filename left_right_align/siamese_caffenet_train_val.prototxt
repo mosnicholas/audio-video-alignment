@@ -1,5 +1,5 @@
 name: "siamese_caffenet_train_val"
-# Changes made: Removed LRN layers, changed softmax to sigmoid cross entropy
+# Changes made: changed softmax to sigmoid cross entropy
 # Improvements to try: xavier
 layer {
   name: "pair_data"
@@ -49,9 +49,10 @@ layer {
   }
   convolution_param {
     num_output: 100
+    kernel_size: 3
+    kernel_size: 5
     kernel_size: 5
     stride: 2
-    group: 5
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -324,9 +325,10 @@ layer {
   }
   convolution_param {
     num_output: 100
+    kernel_size: 3
+    kernel_size: 5
     kernel_size: 5
     stride: 2
-    group: 5
     weight_filler {
       type: "xavier"
     }
