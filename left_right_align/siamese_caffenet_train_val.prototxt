@@ -654,11 +654,11 @@ layer {
 }
 
 layer {
-  name: "loss"
-  type: "SoftmaxWithLoss"
+  name: "acc"
+  type: "Accuracy"
   bottom: "fc8"
   bottom: "label"
-  top: "loss"
+  top: "acc"
   include: {
     phase: TEST
   }
