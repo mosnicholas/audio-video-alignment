@@ -90,23 +90,24 @@ def create_movie_process(video, target_folder, start_i, end_i, first_i, pnum, sa
   video_path = os.path.join(target_folder, 'frame-%06d.jpg')
   for i in xrange(start_i, end_i):
     shifted = i - first_i
+    num_processed = i - start_i
     if shifted in saved_frames: continue
     video.save_frame(video_path % shifted, i)
-    if (shifted % 500 == 0): print '%d frames saved on process %d' % (i - start_i, pnum)
+    if (num_processed % 500 == 0): print '%d frames saved on process %d' % (num_processed, pnum)
   print 'process %d completed' % pnum
 
 def create_movie_dataset(movie_path, target_folder):
   if not os.path.isdir(target_folder): os.makedirs(target_folder)
   video = VideoFileClip(movie_path)
   num_frames = int(video.fps * video.duration)
-  video = video.set_fps(1).set_duration(num_frames).resize(0.5)
+  video = video.set_fps(1).set_duration(num_frames).resize(0.25)
   first_frame = 650
   num_cpus = multiprocessing.cpu_count()
 
   saved_frames = set(map(lambda x: int(x) if x else 0, map(lambda f: ''.join(x for x in f if x.isdigit()), os.listdir(target_folder))))
   num_done = len(saved_frames)
   if num_done == 0:
-    offsets = np.random.randint(0, 10, num_frames - first_frame - 9)
+    offsets = np.random.randint(0, 10, num_frames - first_frame - 20)
     offset_file = os.path.join(target_folder, 'offsets.npz')
     np.savez_compressed(offset_file, offsets=offsets)
 
@@ -201,32 +202,24 @@ def load_data_into_lmdb(data_source_folder, target_folder):
     )).start()
 
 def load_data_hdf5_process(frame_paths, target_folder, shape, offsets, offset_start, offset_end, saved_files, pnum):
-  stacked = np.zeros((1, 20, shape[0], shape[1]))
-  prev_stacked = np.zeros((9, shape[0], shape[1]))
+  loaded_frames = np.zeros((1, 20, shape[0], shape[1]))
 
-  for i in xrange(9):
-    prev_stacked[i, :, :] = greyscale(imread(frame_paths % (i + offset_start)))
-    prev_stacked[i, :, :] = prev_stacked[i, :, :]/prev_stacked[i, :, :].max()
+  for i in xrange(20):
+    loaded_frames[0, i, :, :] = greyscale(imread(frame_paths % (i + offset_start)))
+  loaded_frames = loaded_frames/loaded_frames.max()
 
   for split in xrange(offset_start, offset_end):
     if split in saved_files: continue
     shifted = split - offset_start
-    stacked[0, 10:, :, :] = 0
-    stacked[0, :9, :, :] = prev_stacked
-    stacked[0, 9, :, :] = greyscale(imread(frame_paths % (split + 9)))
-    stacked[0, 9, :, :] = stacked[0, 9, :, :]/stacked[0, 9, :, :].max()
-    prev_stacked = stacked[0, 1:10, :, :]
-    stacked[0, 10:, :, :] = stacked[0, offsets[shifted] - 1:9 + offsets[shifted], :, :]
-
     outfile = target_folder % split
 
     with h5py.File(outfile, 'w') as f:
       f.create_dataset(
-        'left', data=stacked[:, :10, :, :],
+        'left', data=loaded_frames[:, :10, :, :],
         compression='gzip', compression_opts=1
       )
       f.create_dataset(
-        'right', data=stacked[:, 10:, :, :],
+        'right', data=loaded_frames[:, offsets[shifted]:10 + offsets[shifted], :, :],
         compression='gzip', compression_opts=1
       )
       label = np.zeros((1, 1, 1, 1))
@@ -235,6 +228,10 @@ def load_data_hdf5_process(frame_paths, target_folder, shape, offsets, offset_st
         'label', data=label,
         compression='gzip', compression_opts=1
       )
+
+    loaded_frames[0, 0:19, :, :] = loaded_frames[0, 1:20, :, :]
+    loaded_frames[0, 19, :, :] = greyscale(imread(frame_paths % (split + 19)))
+    loaded_frames[0, 19, :, :] = loaded_frames[0, 19, :, :]/loaded_frames[0, 19, :, :].max()
 
     if shifted % 500 == 0:
       print '%s splits processed on process %d' % (shifted, pnum)

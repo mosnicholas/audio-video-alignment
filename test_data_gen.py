@@ -60,13 +60,15 @@ def view_side_by_side_lmdb():
 
 import numpy as np
 import h5py
+import os
 
 local = '/Users/nicholasmoschopoulos/Documents/Classes/Semester8/CS280/project/data/clipped/hitch_hiker/offsets.npz'
 ec2 = '/mnt/data/clipped/hitch_hiker/offsets.npz'
 
 offsets = np.load(ec2)['offsets']
 match = True
-for i in xrange(100):
+start = np.random.randint(0, len(offsets) - 1000)
+for i in xrange(start, start + 1000):
   with h5py.File('frame-%06d.h5' % i, 'r') as hf:
     d = np.array(hf.get('label'))
     match = (match and int(d[0, 0, 0, 0]) == int(offsets[i]))
@@ -74,31 +76,32 @@ for i in xrange(100):
 print match
 
 frames_correct = True
-for i in xrange(100):
+for i in xrange(start, start + 1000):
   with h5py.File('frame-%06d.h5' % i, 'r') as hf:
     left_arr = np.array(hf.get('left'))
     right_arr = np.array(hf.get('right'))
     offset = int(offsets[i])
-    frames_correct = frames_correct and np.all(left_arr[0, offset - 1:10, :, :] == right_arr[0, :10 - (offset - 1), :, :])
-    frames_correct = frames_correct and np.all(right_arr[0, 10 - (offset - 1):, :, :] == 0)
+    frames_correct = frames_correct and np.all(left_arr[0, offset:10, :, :] == right_arr[0, :10 - offset, :, :])
 
 print frames_correct
 
-def view_side_by_side_hdf5():
+def view_side_by_side_hdf5(frames):
   from matplotlib import pyplot as plt
+  import matplotlib.gridspec as gridspec
+  gs1 = gridspec.GridSpec(10, 10)
+  gs1.update(wspace=0.025, hspace=0.05)
   ax = []
-  with h5py.File('frame-000000.h5', 'r') as hf:
-    offset = np.array(hf.get('label'))[0, 0, 0, 0]
+  with h5py.File(frames, 'r') as hf:
+    offset = np.array(hf.get('label'))[0, 0, 0, 0] - 1
     left_ims = np.array(hf.get('left'))
     right_ims = np.array(hf.get('right'))
     for v in xrange(10):
-      ax.append(plt.subplot(2, 10, v + 1))
-      plt.imshow(left_ims[:, :, v], cmap='gray')
-      ax.append(plt.subplot(2, 10, 10 + v + 1))
-      plt.imshow(right_ims[:, :, v], cmap='gray')
+      ax.append(plt.subplot(gs1[v]))
+      plt.imshow(left_ims[0, v, :, :], cmap='gray')
+      ax.append(plt.subplot(gs1[v + 10]))
+      plt.imshow(right_ims[0, v, :, :], cmap='gray')
     for a in ax:
       a.set_xticklabels([])
       a.set_yticklabels([])
-    plt.subplots_adjust(wspace=0, hspace=0)
     plt.show()
 
