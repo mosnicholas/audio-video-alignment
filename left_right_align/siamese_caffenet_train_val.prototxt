@@ -659,4 +659,15 @@ layer {
   bottom: "fc8"
   bottom: "label"
   top: "loss"
+  include: {
+    phase: TEST
+  }
+}
+
+layer {
+  name: "loss"
+  type: "SoftmaxWithLoss"
+  bottom: "fc8"
+  bottom: "label"
+  top: "loss"
 }
