@@ -52,8 +52,7 @@ layer {
     stride: 2
     group: 5
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -109,8 +108,7 @@ layer {
     pad: 2
     kernel_size: 4
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -166,8 +164,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -201,8 +198,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -641,7 +637,7 @@ layer {
     decay_mult: 0
   }
   inner_product_param {
-    num_output: 1
+    num_output: 10
     weight_filler {
       type: "xavier"
     }
@@ -654,7 +650,7 @@ layer {
 
 layer {
   name: "loss"
-  type: "EuclideanLoss"
+  type: "SoftmaxWithLoss"
   bottom: "fc8"
   bottom: "label"
   top: "loss"
@@ -662,7 +658,7 @@ layer {
 
 layer {
   name: "accuracy"
-  type: "EuclideanLoss"
+  type: "Accuracy"
   bottom: "fc8"
   bottom: "label"
   top: "accuracy"
