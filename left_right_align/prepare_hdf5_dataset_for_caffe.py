@@ -298,7 +298,7 @@ def main():
 
 			seg1_ind += 2
 			seg2_ind += 2
-	with h5py.File(os.path.join(args.target_folder, 'seg-000000.h5', 'r') as f:
+	with h5py.File(os.path.join(args.target_folder, 'seg-000000.h5'), 'r') as f:
 		print 'Final datum written: '
 		print f['left']
 		print f['right']
