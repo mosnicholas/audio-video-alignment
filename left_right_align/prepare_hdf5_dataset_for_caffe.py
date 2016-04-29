@@ -298,10 +298,11 @@ def main():
 
 			seg1_ind += 2
 			seg2_ind += 2
-	print h5_location2
-	with h5py.File(h5_location2, 'r') as f:
-		print 'Final datum written: '
-		print f['left']
-		print f['right']
-		print f['label']
+		if ind == num_segments_out:
+				with h5py.File(h5_location2, 'r') as f:
+					print 'Final datum written: '
+					print f['left']
+					print f['right']
+					print f['label']
+
 main()
