@@ -262,7 +262,7 @@ def main():
 				label_mat = np.zeros((1, 1, 1, 1))
 				label_mat[0, 0, 0, 0] = offsets[seg1_ind]
 				f['label'] = label_mat
-				print("Writing to " + h5_location1)
+				#print("Writing to " + h5_location1)
 
 			if in_train[seg1_ind]:
 				filenames_train.append(h5_location1)
@@ -295,7 +295,6 @@ def main():
 						f.write(filename_test + '\n')
 				filenames_train = []
 				filenames_test = []
-
 			seg1_ind += 2
 			seg2_ind += 2
 	with h5py.File(os.path.join(args.target_folder, 'seg-000000.h5'), 'r') as f:
