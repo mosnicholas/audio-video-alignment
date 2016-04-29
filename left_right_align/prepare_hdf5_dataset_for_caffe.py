@@ -298,7 +298,7 @@ def main():
 
 			seg1_ind += 2
 			seg2_ind += 2
-		if ind == num_segments_out:
+		if ind == num_segments_out - 1:
 				with h5py.File(h5_location2, 'r') as f:
 					print 'Final datum written: '
 					print f['left']
