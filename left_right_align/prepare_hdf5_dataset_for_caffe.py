@@ -207,7 +207,9 @@ def main():
 	curr_left_frames = np.zeros((29, 96, 64))
 	curr_right_frames = np.zeros((29, 96, 64))
 
-	for frame_ind in xrange(args.resume_from, num_segments_out):
+	resume_from = 0 if not args.resume_from else args.resume_from
+
+	for frame_ind in xrange(resume_from, num_segments_out):
 
 		left_img = np.zeros((1, 96, 64))
 		left_img[0, :, :] = rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-left.jpeg'.format(frame_ind))))
@@ -260,6 +262,7 @@ def main():
 				label_mat = np.zeros((1, 1, 1, 1))
 				label_mat[0, 0, 0, 0] = offsets[seg1_ind]
 				f['label'] = label_mat
+				print("Writing to " + h5_location1)
 
 			if in_train[seg1_ind]:
 				filenames_train.append(h5_location1)
@@ -292,9 +295,10 @@ def main():
 						f.write(filename_test + '\n')
 				filenames_train = []
 				filenames_test = []
-		
+
 			seg1_ind += 2
 			seg2_ind += 2
+	print h5_location2
 	with h5py.File(h5_location2, 'r') as f:
 		print 'Final datum written: '
 		print f['left']
