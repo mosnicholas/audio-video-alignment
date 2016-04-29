@@ -229,7 +229,7 @@ def main():
 			curr_left_frames = curr_left_frames[1:,:,:]
 			curr_right_frames = curr_right_frames[1:,:,:]
 
-		if frame_ind % 2 == 0:
+		if frame_ind % 2 == 0 and frame_ind > 40:
 
 			assert offsets[seg1_ind] == 0
 			assert offsets[seg2_ind] > 0
