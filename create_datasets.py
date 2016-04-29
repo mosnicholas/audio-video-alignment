@@ -106,7 +106,7 @@ def create_movie_dataset(movie_path, target_folder):
   saved_frames = set(map(lambda x: int(x) if x else 0, map(lambda f: ''.join(x for x in f if x.isdigit()), os.listdir(target_folder))))
   num_done = len(saved_frames)
   if num_done == 0:
-    offsets = np.random.randint(0, 10, num_frames - first_frame - 9)/10.0
+    offsets = np.random.randint(0, 10, num_frames - first_frame - 9)
     offset_file = os.path.join(target_folder, 'offsets.npz')
     np.savez_compressed(offset_file, offsets=offsets)
 
