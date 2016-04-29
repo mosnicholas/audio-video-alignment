@@ -204,9 +204,6 @@ def main():
 	seg1_ind = 0 # no offset
 	seg2_ind = 1 # offset
 
-	curr_left_frames = np.zeros((29, 96, 64))
-	curr_right_frames = np.zeros((29, 96, 64))
-
 	resume_from = 0 if not args.resume_from else args.resume_from
 
 	for frame_ind in xrange(resume_from, num_segments_out):
@@ -216,18 +213,21 @@ def main():
 		right_img = np.zeros((1, 96, 64))
 		right_img[0, :, :] = rgb2gray(imread(os.path.join(args.source_folder, 'frame-{:06d}-right.jpeg'.format(frame_ind))))
 
-
 		#print np.shape(left_img)
 		#print np.shape(curr_left_frames)
-		curr_left_frames = np.concatenate((curr_left_frames, left_img), 0)
-		curr_right_frames = np.concatenate((curr_right_frames, right_img), 0)
+		if frame_ind == resume_from:
+			curr_left_frames = np.zeros((1, 96, 64))
+			curr_left_frames[0, :, :] = left_img
+			curr_right_frames = np.zeros((1, 96, 64))
+			curr_right_frames[0, :, :] = right_img
+		else:
+			curr_left_frames = np.concatenate((curr_left_frames, left_img), 0)
+			curr_right_frames = np.concatenate((curr_right_frames, right_img), 0)
 		#print(np.shape(curr_left_frames))
 
-		if np.size(curr_left_frames, 0) > 29:
+		if np.size(curr_left_frames, 0) > 40:
 			curr_left_frames = curr_left_frames[1:,:,:]
 			curr_right_frames = curr_right_frames[1:,:,:]
-
-		h5_location2 = ''
 
 		if frame_ind % 2 == 0:
 
@@ -250,7 +250,7 @@ def main():
 			stacked_right = np.zeros((1, 10, 96, 64))
 			stacked_right[0, :, :, :] = curr_right_frames[:20:2,:,:]
 			stacked_offset = np.zeros((1, 10, 96, 64))
-			stacked_offset[0, :, :, :] = curr_left_frames[offset:20+2*offset:2,:,:] if offset_left else curr_right_frames[offset:20+2*offset:2,:,:]
+			stacked_offset[0, :, :, :] = curr_left_frames[2*offset:20+2*offset:2,:,:] if offset_left else curr_right_frames[offset:20+2*offset:2,:,:]
 			if np.max(curr_left_frames) > 1 or np.max(curr_right_frames) > 1:
 				stacked_left *= 1.0/255
 				stacked_right *= 1.0/255
