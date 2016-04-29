@@ -1,32 +1,45 @@
 name: "siamese_caffenet_train_val"
 # Changes made: changed softmax to sigmoid cross entropy
 # Improvements to try: xavier
+#layer {
+#  name: "pair_data"
+#  type: "HDF5Data"
+#  top: "left"
+#  top: "right"
+#  top: "label"
+#  include {
+#    phase: TRAIN
+#  }
+#  hdf5_data_param {
+#    source: "/mnt/data/dataset_prepared/examples_train.txt"
+#    batch_size: 64
+#  }
+#}
+#layer {
+#  name: "pair_data"
+#  type: "HDF5Data"
+#  top: "left"
+#  top: "right"
+#  top: "label"
+#  include {
+#    phase: TEST
+#  }
+#  hdf5_data_param {
+#    source: "/mnt/data/dataset_prepared/examples_test.txt"
+#    batch_size: 64
+#  }
+#}
+
 layer {
-  name: "pair_data"
-  type: "HDF5Data"
+  name: "dummy"
+  type: "DummyData"
   top: "left"
   top: "right"
   top: "label"
-  include {
-    phase: TRAIN
-  }
-  hdf5_data_param {
-    source: "/mnt/data/dataset_prepared/examples_train.txt"
-    batch_size: 64
-  }
-}
-layer {
-  name: "pair_data"
-  type: "HDF5Data"
-  top: "left"
-  top: "right"
-  top: "label"
-  include {
-    phase: TEST
-  }
-  hdf5_data_param {
-    source: "/mnt/data/dataset_prepared/examples_test.txt"
-    batch_size: 64
+  dummy_data_param {
+    shape { dim: 64 dim: 1 dim: 10 dim: 64 dim: 96 }
+    shape { dim: 64 dim: 1 dim: 10 dim: 64 dim: 96 }
+    shape { dim: 64 dim: 1 dim: 1 dim: 1 dim: 1 }
   }
 }
 
