@@ -6,7 +6,7 @@ test_iter: 20
 # Carry out testing every 500 training iterations.
 test_interval: 500
 # The base learning rate, momentum and the weight decay of the network.
-base_lr: 0.000001
+base_lr: 0.01
 lr_policy: "step"
 gamma: 0.1
 stepsize: 10000
@@ -19,6 +19,6 @@ display: 100
 max_iter: 35000
 # snapshot intermediate results
 snapshot: 5000
-snapshot_prefix: "/mnt/data/snapshots/scn"
+snapshot_prefix: "/mnt/data/snapshots/s"
 # solver mode: CPU or GPU
 solver_mode: GPU
