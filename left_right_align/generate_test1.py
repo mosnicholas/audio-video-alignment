@@ -78,12 +78,12 @@ def main():
 			#print(np.shape(curr_left_frames))
 			#print(np.shape(curr_left_frames[:20:2,:,:]))
 			#print(np.shape(stacked_left[0, :, :, :]))
-			min_frame = np.randint(255)
-			max_frame = np.randint(min_frame + 1, 256)
+			min_frame = np.random.randint(255)
+			max_frame = np.random.randint(min_frame + 1, 256)
 			stacked_left = asc * (max_frame - min_frame) + min_frame
 			stacked_right = stacked_left
-			min_frame = np.randint(255)
-			max_frame = np.randint(min_frame + 1, 256)
+			min_frame = np.random.randint(255)
+			max_frame = np.random.randint(min_frame + 1, 256)
 			stacked_offset = asc * (max_frame - min_frame) + min_frame
 
 			stacked_left *= 1.0/255
