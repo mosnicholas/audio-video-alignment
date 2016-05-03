@@ -4,7 +4,7 @@ net: "siamese.prototxt"
 # Should be number of examples / test batch size
 test_iter: 99
 # Carry out testing every 500 training iterations.
-test_interval: 50
+test_interval: 10
 # The base learning rate, momentum and the weight decay of the network.
 base_lr: 0.01
 momentum: 0.9
