@@ -6,7 +6,7 @@ layer {
   type: "HDF5Data"
   top: "left"
   top: "right"
-  top: "label"
+  top: "label_bin"
   include {
     phase: TRAIN
   }
@@ -572,7 +572,7 @@ layer {
   name: "loss"
   type: "SoftmaxWithLoss"
   bottom: "fc8"
-  bottom: "label"
+  bottom: "label_bin"
   top: "loss"
 }
 
@@ -580,7 +580,7 @@ layer {
   name: "acc"
   type: "Accuracy"
   bottom: "fc8"
-  bottom: "label"
+  bottom: "label_bin"
   top: "acc"
   include: {
     phase: TEST
