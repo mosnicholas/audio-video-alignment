@@ -69,8 +69,7 @@ layer {
     stride: 5
     stride: 5
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -86,20 +85,9 @@ layer {
 }
 
 layer {
-  name: "norm1"
-  type: "LRN"
-  bottom: "conv1"
-  top: "norm1"
-  lrn_param {
-    local_size: 5
-    alpha: 0.0001
-    beta: 0.75
-  }
-}
-layer {
   name: "conv2"
   type: "Convolution"
-  bottom: "norm1"
+  bottom: "conv1"
   top: "conv2"
   param {
     name: "conv2_w"
@@ -121,8 +109,7 @@ layer {
     stride: 2
     stride: 2
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -137,20 +124,9 @@ layer {
   top: "conv2"
 }
 layer {
-  name: "norm2"
-  type: "LRN"
-  bottom: "conv2"
-  top: "norm2"
-  lrn_param {
-    local_size: 5
-    alpha: 0.0001
-    beta: 0.75
-  }
-}
-layer {
   name: "conv3"
   type: "Convolution"
-  bottom: "norm2"
+  bottom: "conv2"
   top: "conv3"
   param {
     name: "conv3_w"
@@ -167,8 +143,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -202,8 +177,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -335,20 +309,9 @@ layer {
   top: "conv1_rep"
 }
 layer {
-  name: "norm1_rep"
-  type: "LRN"
-  bottom: "conv1_rep"
-  top: "norm1_rep"
-  lrn_param {
-    local_size: 5
-    alpha: 0.0001
-    beta: 0.75
-  }
-}
-layer {
   name: "conv2_rep"
   type: "Convolution"
-  bottom: "norm1_rep"
+  bottom: "conv1_rep"
   top: "conv2_rep"
   param {
     name: "conv2_w"
@@ -384,21 +347,11 @@ layer {
   bottom: "conv2_rep"
   top: "conv2_rep"
 }
-layer {
-  name: "norm2_rep"
-  type: "LRN"
-  bottom: "conv2_rep"
-  top: "norm2_rep"
-  lrn_param {
-    local_size: 5
-    alpha: 0.0001
-    beta: 0.75
-  }
-}
+
 layer {
   name: "conv3_rep"
   type: "Convolution"
-  bottom: "norm2_rep"
+  bottom: "conv2_rep"
   top: "conv3_rep"
   param {
     name: "conv3_w"
