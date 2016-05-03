@@ -155,7 +155,7 @@ def main():
 	num_source_frames = 1
 	while os.path.isfile(os.path.join(args.source_folder, 'frame-{:06d}-left.jpeg'.format(num_source_frames))):
 		num_source_frames += 1
-	print 'Counted ' + str(num_source_frames) + ' source segments.'
+	print 'Counted ' + str(num_source_frames) + ' source frames.'
 	num_source_frames = min(args.num_to_process, num_source_frames - 50) if args.num_to_process else num_source_frames - 50 # approx for safety
 	num_segments_out = num_source_frames 
 
@@ -183,6 +183,9 @@ def main():
 		offsets = np.random.randint(1, 11, num_segments_out)
 		offsets[::2] = 0
 		np.savetxt(os.path.join(args.target_folder, 'offsets.csv'), offsets)
+		offsets_bin = offsets[:]
+		offsets_bin[1::2] = 1
+		np.savetxt(os.path.join(args.target_folder, 'offsets.csv'), offsets_bin)
 
 	in_train = np.array([True] * num_source_frames)
 	in_train[test_inds] = False
@@ -242,15 +245,15 @@ def main():
 			h5_location2 = os.path.join(args.target_folder, h5_filename2)
 
 			#print(np.shape(curr_left_frames))
-			stacked_left = np.zeros((1, 10, 96, 64))
+			stacked_left = np.zeros((1, 1, 10, 96, 64))
 			#print(np.shape(curr_left_frames))
 			#print(np.shape(curr_left_frames[:20:2,:,:]))
 			#print(np.shape(stacked_left[0, :, :, :]))
-			stacked_left[0, :, :, :] = curr_left_frames[:20:2,:,:]
-			stacked_right = np.zeros((1, 10, 96, 64))
-			stacked_right[0, :, :, :] = curr_right_frames[:20:2,:,:]
-			stacked_offset = np.zeros((1, 10, 96, 64))
-			stacked_offset[0, :, :, :] = curr_left_frames[2*offset:20+2*offset:2,:,:] if offset_left else curr_right_frames[2*offset:20+2*offset:2,:,:]
+			stacked_left[0, 0, :, :, :] = curr_left_frames[:20:2,:,:]
+			stacked_right = np.zeros((1, 1, 10, 96, 64))
+			stacked_right[0, 0, :, :, :] = curr_right_frames[:20:2,:,:]
+			stacked_offset = np.zeros((1, 1, 10, 96, 64))
+			stacked_offset[0, 0, :, :, :] = curr_left_frames[2*offset:20+2*offset:2,:,:] if offset_left else curr_right_frames[2*offset:20+2*offset:2,:,:]
 			if np.max(curr_left_frames) > 1 or np.max(curr_right_frames) > 1:
 				stacked_left *= 1.0/255
 				stacked_right *= 1.0/255
@@ -259,7 +262,7 @@ def main():
 			with h5py.File(h5_location1, 'w') as f:
 				f['left'] = stacked_left
 				f['right'] = stacked_right
-				label_mat = np.zeros((1, 1, 1, 1))
+				label_mat = np.zeros(( 1, 1, 1, 1))
 				label_mat[0, 0, 0, 0] = offsets[seg1_ind]
 				f['label'] = label_mat
 				#print("Writing to " + h5_location1)
