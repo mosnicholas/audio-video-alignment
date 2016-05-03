@@ -66,6 +66,8 @@ layer {
     kernel_size: 7
     kernel_size: 7
     stride: 2
+    stride: 3
+    stride: 4
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -91,7 +93,7 @@ layer {
     shape {
       dim: 0  # copy the dimension from below
       dim: 0
-      dim: 0
+      dim: 116 # 4*29
       dim: -1 # infer it from the other dimensions
     }
   }
@@ -104,9 +106,7 @@ layer {
   pooling_param {
     pool: MAX
     kernel_size: 1
-    kernel_size: 3
-    stride: 1
-    stride: 3
+    stride: 2
   }
 }
 
@@ -119,7 +119,7 @@ layer {
     shape {
       dim: 0  # copy the dimension from below
       dim: 0
-      dim: 5
+      dim: 4
       dim: 12 # infer it from the other dimensions
       dim: -1
     }
