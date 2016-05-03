@@ -58,7 +58,7 @@ def main():
 	seg1_ind = 0 # no offset
 	seg2_ind = 1 # offset
 
-	base_asc = [float(num)/10 for num in range(0, 11)]
+	base_asc = [float(num)/9 for num in range(0, 10)]
 	asc = np.array(base_asc).reshape((1, 1, 10, 1, 1)).tile((1, 1, 1, 96, 64))
 
 	for frame_ind in xrange(num_segments_out):
