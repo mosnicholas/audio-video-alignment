@@ -39,7 +39,7 @@ def main():
 	offsets[::2] = 0
 	np.savetxt(os.path.join(args.target_folder, 'offsets_bin.csv'), offsets, fmt="%i")
 
-	in_train = np.array([True] * num_source_frames)
+	in_train = np.array([True] * num_segments_out)
 	in_train[test_inds] = False
 
 	# Setup list of h5 filenames
