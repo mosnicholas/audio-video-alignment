@@ -32,13 +32,13 @@ parser.add_argument('--frame_stride', default=False,
   help='Output sequences will effectively reduce the frame rate by this factor.')
 args = parser.parse_args()
 
-#args.youtube_id = 'XIeFKTbg3Aw'
+args.youtube_id = 'XIeFKTbg3Aw'
 
 def rgb2gray(rgb):
   return np.dot(rgb[...,:3], [0.299, 0.587, 0.114])
 
 def download_youtube_video(youtube_id, target_path, create_subtitles=False):
-  target_filename = os.path.join(target_path, 'hitch_hiker')
+  target_filename = os.path.join(target_path, 'hitch_hiker.mp4')
   command = 'youtube-dl %s -o %s' % (youtube_id, target_filename)
   if subprocess.call(command, shell=True) == 0:
     return True
@@ -118,9 +118,9 @@ def split_video_stride():
   if (args.presentation_movie):
     video = video.subclip((1, 8, 36), (1, 8, 41))
   print("Resizing and trimming source video")
-  video_duration_needed = 20000 / video.fps
-  start_time = 1000 / video.fps
-  video = video.subclip(start_time, start_time + video_duration_needed).resize((128, 96))
+  start_time = 10
+  #print("Clipping to duration [{:d}, {:d}]".format(start_time, video.duration))
+  video = video.subclip(start_time, video.duration).resize((128, 96))
   print("Generating left and right source videos...")
   if (args.presentation_movie):
     video.write_videofile(os.path.join(args.target_folder, 'pres_video.mp4'), codec='libx264', audio=False)
@@ -130,14 +130,21 @@ def split_video_stride():
   left_video = moviepy.video.fx.all.crop(video, x1=0, width=width)
   right_video = moviepy.video.fx.all.crop(video, x1=width + args.middle_gap_pixel_size, width=width)
 
-  for frame_ind in xrange(20000):
-    frame_t = float(frame_ind) / framerate
-    left_frame = left_video.get_frame(frame_t)
-    right_frame = right_video.get_frame(frame_t)
-    misc.toimage(left_frame, cmin=np.min(left_frame), cmax=np.max(left_frame)).save(os.path.join(args.target_folder, ('frame-{:06d}-right.jpeg').format(frame_ind)))
-    misc.toimage(right_frame, cmin=np.min(right_frame), cmax=np.max(right_frame)).save(os.path.join(args.target_folder, ('frame-{:06d}-left.jpeg').format(frame_ind)))
-    if frame_ind % 100 == 0:
-      print("Done with " + str(frame_ind))
+  frame_ind = start_time
+  while True:
+    try:
+      frame_t = float(frame_ind) / framerate
+      left_frame = left_video.get_frame(frame_t)
+      right_frame = right_video.get_frame(frame_t)
+      misc.toimage(left_frame, cmin=np.min(left_frame), cmax=np.max(left_frame)).save(os.path.join(args.target_folder, ('frame-{:06d}-right.jpeg').format(frame_ind)))
+      misc.toimage(right_frame, cmin=np.min(right_frame), cmax=np.max(right_frame)).save(os.path.join(args.target_folder, ('frame-{:06d}-left.jpeg').format(frame_ind)))
+      if frame_ind % 100 == 0:
+        print("Done with " + str(frame_ind))
+      frame_ind += 1
+    except Error as e:
+      print("Finished processing {:d} frames".format(frame_ind))
+      print e
+      break
   return True
 
   output_ind = args.output_starting_ind
