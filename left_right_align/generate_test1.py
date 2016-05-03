@@ -58,8 +58,6 @@ def main():
 	seg1_ind = 0 # no offset
 	seg2_ind = 1 # offset
 
-	resume_from = 0 if not args.resume_from else args.resume_from
-
 	base_asc = [float(num)/10 for num in range(0, 11)]
 	asc = np.array(base_asc).reshape((1, 1, 10, 1, 1)).tile((1, 1, 1, 96, 64))
 
