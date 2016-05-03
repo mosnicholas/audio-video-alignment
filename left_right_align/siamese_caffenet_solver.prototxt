@@ -19,6 +19,6 @@ display: 100
 max_iter: 35000
 # snapshot intermediate results
 snapshot: 5000
-snapshot_prefix: "/mnt/data/snapshots/s"
+snapshot_prefix: "/mnt/data/snapshots/bin"
 # solver mode: CPU or GPU
 solver_mode: GPU
