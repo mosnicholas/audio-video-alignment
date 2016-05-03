@@ -20,7 +20,7 @@ layer {
   type: "HDF5Data"
   top: "left"
   top: "right"
-  top: "label"
+  top: "label_bin"
   include {
     phase: TEST
   }
