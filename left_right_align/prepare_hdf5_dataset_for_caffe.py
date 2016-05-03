@@ -182,10 +182,10 @@ def main():
 			w.writerows(test_inds_to_write)
 		offsets = np.random.randint(1, 11, num_segments_out)
 		offsets[::2] = 0
-		np.savetxt(os.path.join(args.target_folder, 'offsets.csv'), offsets)
+		np.savetxt(os.path.join(args.target_folder, 'offsets.csv'), int(offsets))
 		offsets_bin = offsets[:]
 		offsets_bin[1::2] = 1
-		np.savetxt(os.path.join(args.target_folder, 'offsets.csv'), offsets_bin)
+		np.savetxt(os.path.join(args.target_folder, 'offsets_bin.csv'), int(offsets_bin))
 
 	in_train = np.array([True] * num_source_frames)
 	in_train[test_inds] = False
@@ -262,7 +262,7 @@ def main():
 			with h5py.File(h5_location1, 'w') as f:
 				f['left'] = stacked_left
 				f['right'] = stacked_right
-				label_mat = np.zeros(( 1, 1, 1, 1))
+				label_mat = np.zeros((1, 1, 1, 1))
 				label_mat[0, 0, 0, 0] = offsets[seg1_ind]
 				f['label'] = label_mat
 				#print("Writing to " + h5_location1)
