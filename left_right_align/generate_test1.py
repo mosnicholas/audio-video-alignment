@@ -107,12 +107,8 @@ def main():
 				filenames_test.append(h5_location1)
 
 			with h5py.File(h5_location2, 'w') as f:
-				if offset_left:
-					f['left'] = stacked_offset
-					f['right'] = stacked_right
-				else:
-					f['left'] = stacked_left
-					f['right'] = stacked_offset
+				f['left'] = stacked_left
+				f['right'] = stacked_offset
 				label_mat = np.zeros((1, 1, 1, 1))
 				label_mat[0, 0, 0, 0] = offsets[seg2_ind]
 				f['label'] = label_mat
