@@ -35,7 +35,7 @@ def main():
 		w = csv.writer(test_inds_csv)
 		test_inds_to_write = [[ind] for ind in test_inds]
 		w.writerows(test_inds_to_write)
-	offsets = np.ones((1, num_segments_out))
+	offsets = np.ones(num_segments_out)
 	offsets[::2] = 0
 	np.savetxt(os.path.join(args.target_folder, 'offsets_bin.csv'), offsets, fmt="%i")
 
