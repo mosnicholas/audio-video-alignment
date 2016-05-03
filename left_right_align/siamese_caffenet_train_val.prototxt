@@ -62,12 +62,12 @@ layer {
   }
   convolution_param {
     num_output: 100
-    kernel_size: 3 
-    kernel_size: 7
-    kernel_size: 7
+    kernel_size: 3
+    kernel_size: 9
+    kernel_size: 9
     stride: 2
-    stride: 3
-    stride: 4
+    stride: 5
+    stride: 5
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -84,52 +84,11 @@ layer {
   bottom: "conv1"
   top: "conv1"
 }
-layer {
-  name: "reshape1"
-  type: "Reshape"
-  bottom: "conv1"
-  top: "reshape1"
-  reshape_param {
-    shape {
-      dim: 0  # copy the dimension from below
-      dim: 0
-      dim: 116 # 4*29
-      dim: -1 # infer it from the other dimensions
-    }
-  }
-}
-layer {
-  name: "pool1"
-  type: "Pooling"
-  bottom: "reshape1"
-  top: "pool1"
-  pooling_param {
-    pool: MAX
-    kernel_size: 1
-    stride: 2
-  }
-}
-
-layer {
-  name: "reshape2"
-  type: "Reshape"
-  bottom: "pool1"
-  top: "reshape2"
-  reshape_param {
-    shape {
-      dim: 0  # copy the dimension from below
-      dim: 0
-      dim: 4
-      dim: 12 # infer it from the other dimensions
-      dim: -1
-    }
-  }
-}
 
 layer {
   name: "norm1"
   type: "LRN"
-  bottom: "reshape2"
+  bottom: "conv1"
   top: "norm1"
   lrn_param {
     local_size: 5
@@ -137,7 +96,6 @@ layer {
     beta: 0.75
   }
 }
-
 layer {
   name: "conv2"
   type: "Convolution"
@@ -159,6 +117,9 @@ layer {
     kernel_size: 3
     kernel_size: 4
     kernel_size: 4
+    stride: 1
+    stride: 2
+    stride: 2
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -175,54 +136,10 @@ layer {
   bottom: "conv2"
   top: "conv2"
 }
-
-layer {
-  name: "reshape3"
-  type: "Reshape"
-  bottom: "conv2"
-  top: "reshape3"
-  reshape_param {
-    shape {
-      dim: 0  # copy the dimension from below
-      dim: 0
-      dim: 0
-      dim: -1 # infer it from the other dimensions
-    }
-  }
-}
-
-layer {
-  name: "pool2"
-  type: "Pooling"
-  bottom: "reshape3"
-  top: "pool2"
-  pooling_param {
-    pool: MAX
-    kernel_size: 2
-    stride: 2
-  }
-}
-
-layer {
-  name: "reshape4"
-  type: "Reshape"
-  bottom: "pool2"
-  top: "reshape4"
-  reshape_param {
-    shape {
-      dim: 0  # copy the dimension from below
-      dim: 0
-      dim: 3
-      dim: 7 # infer it from the other dimensions
-      dim: -1
-    }
-  }
-}
-
 layer {
   name: "norm2"
   type: "LRN"
-  bottom: "reshape4"
+  bottom: "conv2"
   top: "norm2"
   lrn_param {
     local_size: 5
@@ -334,53 +251,10 @@ layer {
   bottom: "conv5"
   top: "conv5"
 }
-
-layer {
-  name: "reshape5"
-  type: "Reshape"
-  bottom: "conv5"
-  top: "reshape5"
-  reshape_param {
-    shape {
-      dim: 0  # copy the dimension from below
-      dim: 0
-      dim: 0
-      dim: -1 # infer it from the other dimensions
-    }
-  }
-}
-
-layer {
-  name: "pool5"
-  type: "Pooling"
-  bottom: "conv5"
-  top: "pool5"
-  pooling_param {
-    pool: MAX
-    kernel_size: 2
-    stride: 2
-  }
-}
-
-layer {
-  name: "reshape6"
-  type: "Reshape"
-  bottom: "pool5"
-  top: "reshape6"
-  reshape_param {
-    shape {
-      dim: 0  # copy the dimension from below
-      dim: 0
-      dim: 1
-      dim: 0
-      dim: -1 # infer it from the other dimensions
-    }
-  }
-}
 layer {
   name: "fc6"
   type: "InnerProduct"
-  bottom: "reshape6"
+  bottom: "conv5"
   top: "fc6"
   param {
     name: "fc6_w"
@@ -440,9 +314,11 @@ layer {
   convolution_param {
     num_output: 100
     kernel_size: 3
-    kernel_size: 7
-    kernel_size: 7
+    kernel_size: 9
+    kernel_size: 9
     stride: 2
+    stride: 5
+    stride: 5
     weight_filler {
       type: "xavier"
     }
@@ -459,51 +335,9 @@ layer {
   top: "conv1_rep"
 }
 layer {
-  name: "reshape1_rep"
-  type: "Reshape"
-  bottom: "conv1_rep"
-  top: "reshape1_rep"
-  reshape_param {
-    shape {
-      dim: 0  # copy the dimension from below
-      dim: 0
-      dim: 0
-      dim: -1 # infer it from the other dimensions
-    }
-  }
-}
-layer {
-  name: "pool1_rep"
-  type: "Pooling"
-  bottom: "reshape1_rep"
-  top: "pool1_rep"
-  pooling_param {
-    pool: MAX
-    kernel_size: 2
-    stride: 2
-  }
-}
-
-layer {
-  name: "reshape2_rep"
-  type: "Reshape"
-  bottom: "pool1_rep"
-  top: "reshape2_rep"
-  reshape_param {
-    shape {
-      dim: 0  # copy the dimension from below
-      dim: 0
-      dim: 5
-      dim: 12 # infer it from the other dimensions
-      dim: -1
-    }
-  }
-}
-
-layer {
   name: "norm1_rep"
   type: "LRN"
-  bottom: "reshape2_rep"
+  bottom: "conv1_rep"
   top: "norm1_rep"
   lrn_param {
     local_size: 5
@@ -532,6 +366,9 @@ layer {
     kernel_size: 3
     kernel_size: 4
     kernel_size: 4
+    stride: 1
+    stride: 2
+    stride: 2    
     weight_filler {
       type: "xavier"
     }
@@ -547,55 +384,10 @@ layer {
   bottom: "conv2_rep"
   top: "conv2_rep"
 }
-
-
-layer {
-  name: "reshape3_rep"
-  type: "Reshape"
-  bottom: "conv2_rep"
-  top: "reshape3_rep"
-  reshape_param {
-    shape {
-      dim: 0  # copy the dimension from below
-      dim: 0
-      dim: 0
-      dim: -1 # infer it from the other dimensions
-    }
-  }
-}
-
-layer {
-  name: "pool2_rep"
-  type: "Pooling"
-  bottom: "reshape3_rep"
-  top: "pool2_rep"
-  pooling_param {
-    pool: MAX
-    kernel_size: 2
-    stride: 2
-  }
-}
-
-layer {
-  name: "reshape4_rep"
-  type: "Reshape"
-  bottom: "pool2_rep"
-  top: "reshape4_rep"
-  reshape_param {
-    shape {
-      dim: 0  # copy the dimension from below
-      dim: 0
-      dim: 3
-      dim: 7 # infer it from the other dimensions
-      dim: -1
-    }
-  }
-}
-
 layer {
   name: "norm2_rep"
   type: "LRN"
-  bottom: "reshape4_rep"
+  bottom: "relu2_rep"
   top: "norm2_rep"
   lrn_param {
     local_size: 5
@@ -705,54 +497,10 @@ layer {
   bottom: "conv5_rep"
   top: "conv5_rep"
 }
-
-layer {
-  name: "reshape5_rep"
-  type: "Reshape"
-  bottom: "conv5_rep"
-  top: "reshape5_rep"
-  reshape_param {
-    shape {
-      dim: 0  # copy the dimension from below
-      dim: 0
-      dim: 0
-      dim: -1 # infer it from the other dimensions
-    }
-  }
-}
-
-layer {
-  name: "pool5_rep"
-  type: "Pooling"
-  bottom: "reshape5_rep"
-  top: "pool5_rep"
-  pooling_param {
-    pool: MAX
-    kernel_size: 2
-    stride: 2
-  }
-}
-
-layer {
-  name: "reshape6_rep"
-  type: "Reshape"
-  bottom: "pool5_rep"
-  top: "reshape6_rep"
-  reshape_param {
-    shape {
-      dim: 0  # copy the dimension from below
-      dim: 0
-      dim: 1
-      dim: 0
-      dim: -1 # infer it from the other dimensions
-    }
-  }
-}
-
 layer {
   name: "fc6_rep"
   type: "InnerProduct"
-  bottom: "reshape6_rep"
+  bottom: "conv5_rep"
   top: "fc6_rep"
   param {
     name: "fc6_w"
