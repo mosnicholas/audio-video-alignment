@@ -65,6 +65,8 @@ def split_video_pres():
   video = video.subclip((1, 8, 36), (1, 8, 41))
   video = video.resize((128, 96))
   framerate = video.fps
+  duration_seconds = video.duration
+  print("Clip has duration of " + str(duration_seconds) + "")
   width = (np.size(video.get_frame(0), 1) - args.middle_gap_pixel_size) / 2
   left_video = moviepy.video.fx.all.crop(video, x1=0, width=width)
   right_video = moviepy.video.fx.all.crop(video, x1=width + args.middle_gap_pixel_size, width=width)
@@ -127,14 +129,15 @@ def split_video_stride():
   num_frames = int(video.fps * video.duration)
   left_video = moviepy.video.fx.all.crop(video, x1=0, width=width)
   right_video = moviepy.video.fx.all.crop(video, x1=width + args.middle_gap_pixel_size, width=width)
-  left_video = left_video.set_fps(1).set_duration(20000)
-  right_video = right_video.set_fps(1).set_duration(20000)
 
-  for ind in range(0, 20000):
-    right_video.save_frame(os.path.join(args.target_folder, ('frame-{:06d}-right.jpeg').format(ind)), ind)
-    left_video.save_frame(os.path.join(args.target_folder, ('frame-{:06d}-left.jpeg').format(ind)), ind)
-    if ind % 100 == 0:
-      print("Done with " + str(ind))
+  for frame_ind in xrange(20000):
+    frame_t = float(frame_ind) / framerate
+    left_frame = left_video.get_frame(frame_t)
+    right_frame = right_video.get_frame(frame_t)
+    misc.toimage(left_frame, cmin=np.min(left_frame), cmax=np.max(left_frame)).save(os.path.join(args.target_folder, ('frame-{:06d}-right.jpeg').format(frame_ind)))
+    misc.toimage(right_frame, cmin=np.min(right_frame), cmax=np.max(right_frame)).save(os.path.join(args.target_folder, ('frame-{:06d}-left.jpeg').format(frame_ind)))
+    if frame_ind % 100 == 0:
+      print("Done with " + str(frame_ind))
   return True
 
   output_ind = args.output_starting_ind
