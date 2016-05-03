@@ -39,7 +39,7 @@ layer {
   dummy_data_param {
     shape { dim: 64 dim: 1 dim: 10 dim: 64 dim: 96 }
     shape { dim: 64 dim: 1 dim: 10 dim: 64 dim: 96 }
-    shape { dim: 64 dim: 1 dim: 1 dim: 1 dim: 1 }
+    shape { dim: 64 dim: 1 dim: 1 dim: 1 }
   }
 }
 
