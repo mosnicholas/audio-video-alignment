@@ -29,8 +29,6 @@ def main():
 	if not os.path.isdir(args.target_folder):
 		os.mkdir(args.target_folder)
 
-	segment_inds = range(num_source_frames)
-
 	test_inds_csv_path = os.path.join(args.target_folder, 'test_inds.csv')
 	test_inds = random.sample(segment_inds, num_source_frames/10)
 	with open(test_inds_csv_path, 'w') as test_inds_csv:
