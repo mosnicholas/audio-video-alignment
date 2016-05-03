@@ -180,7 +180,7 @@ def main():
 			w = csv.writer(test_inds_csv)
 			test_inds_to_write = [[ind] for ind in test_inds]
 			w.writerows(test_inds_to_write)
-		offsets = [int(num) for num in np.random.randint(1, 11, num_segments_out)]
+		offsets = np.random.randint(1, 11, num_segments_out).as_type(int)
 		offsets[::2] = 0
 		np.savetxt(os.path.join(args.target_folder, 'offsets.csv'), offsets)
 		offsets_bin = offsets[:]
