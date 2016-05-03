@@ -387,7 +387,7 @@ layer {
 layer {
   name: "norm2_rep"
   type: "LRN"
-  bottom: "relu2_rep"
+  bottom: "conv2_rep"
   top: "norm2_rep"
   lrn_param {
     local_size: 5
