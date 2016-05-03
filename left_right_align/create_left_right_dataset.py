@@ -118,7 +118,7 @@ def split_video_stride():
   if (args.presentation_movie):
     video = video.subclip((1, 8, 36), (1, 8, 41))
   print("Resizing and trimming source video")
-  start_time = 10
+  start_frame = 10
   #print("Clipping to duration [{:d}, {:d}]".format(start_time, video.duration))
   video = video.subclip(start_time, video.duration).resize((128, 96))
   print("Generating left and right source videos...")
@@ -130,7 +130,7 @@ def split_video_stride():
   left_video = moviepy.video.fx.all.crop(video, x1=0, width=width)
   right_video = moviepy.video.fx.all.crop(video, x1=width + args.middle_gap_pixel_size, width=width)
 
-  frame_ind = start_time
+  frame_ind = 0
   while True:
     try:
       frame_t = float(frame_ind) / framerate

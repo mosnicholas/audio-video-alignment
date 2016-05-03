@@ -201,7 +201,7 @@ def main():
 	except OSError:
 		pass
 
-	sample_frame = np.array(imread(os.path.join(args.source_folder, 'frame-00-right.jpeg')))
+	sample_frame = np.array(imread(os.path.join(args.source_folder, 'frame-000000-right.jpeg')))
 	full_file_path = ''
 
 	seg1_ind = 0 # no offset
