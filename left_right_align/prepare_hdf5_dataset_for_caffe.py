@@ -182,10 +182,10 @@ def main():
 			w.writerows(test_inds_to_write)
 		offsets = np.random.randint(1, 11, num_segments_out)
 		offsets[::2] = 0
-		np.savetxt(os.path.join(args.target_folder, 'offsets.csv'), fmt="%i", offsets)
+		np.savetxt(os.path.join(args.target_folder, 'offsets.csv'), offsets, fmt="%i")
 		offsets_bin = offsets[:]
 		offsets_bin[1::2] = 1
-		np.savetxt(os.path.join(args.target_folder, 'offsets_bin.csv'), fmt="%i", offsets_bin)
+		np.savetxt(os.path.join(args.target_folder, 'offsets_bin.csv'), offsets_bin, fmt="%i")
 
 	in_train = np.array([True] * num_source_frames)
 	in_train[test_inds] = False
