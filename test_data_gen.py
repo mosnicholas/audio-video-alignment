@@ -58,6 +58,7 @@ def view_side_by_side_lmdb():
 
 ## Test HDF5 data
 
+from scipy.ndimage import imread
 import numpy as np
 import h5py
 import os
@@ -67,8 +68,8 @@ ec2 = '/mnt/data/clipped/hitch_hiker/offsets.npz'
 
 offsets = np.load(ec2)['offsets']
 match = True
-start = np.random.randint(0, len(offsets) - 1000)
-for i in xrange(start, start + 1000):
+start = np.random.randint(0, len(offsets) - 1000, 1000)
+for i in start:
   with h5py.File('frame-%06d.h5' % i, 'r') as hf:
     d = np.array(hf.get('label'))
     match = (match and int(d[0, 0, 0, 0]) == int(offsets[i]))
@@ -76,7 +77,7 @@ for i in xrange(start, start + 1000):
 print match
 
 frames_correct = True
-for i in xrange(start, start + 1000):
+for i in start:
   with h5py.File('frame-%06d.h5' % i, 'r') as hf:
     left_arr = np.array(hf.get('left'))
     right_arr = np.array(hf.get('right'))
@@ -85,14 +86,30 @@ for i in xrange(start, start + 1000):
 
 print frames_correct
 
-def view_side_by_side_hdf5(frames):
+
+frames_correct = True
+for i in start:
+  image = imread('/mnt/data/clipped/hitch_hiker/frame-%06d.jpg' % i)/255.0
+  image = np.dot(image[:, :, :3], [0.299, 0.587, 0.114])
+  with h5py.File('frame-%06d.h5' % i, 'r') as hf:
+    left_arr = np.array(hf.get('left'))
+    frames_correct = frames_correct and np.all(left_arr[0, 0, :, :] == image)
+    if not frames_correct: 
+      print i
+      break
+
+print frames_correct
+
+
+def view_side_by_side_hdf5(frame_num):
+  frame_path = '/mnt/data/clipped/hh_data/frame-%06d.h5' % frame_num
   from matplotlib import pyplot as plt
   import matplotlib.gridspec as gridspec
   gs1 = gridspec.GridSpec(10, 10)
   gs1.update(wspace=0.025, hspace=0.05)
   ax = []
-  with h5py.File(frames, 'r') as hf:
-    offset = np.array(hf.get('label'))[0, 0, 0, 0] - 1
+  with h5py.File(frame_path, 'r') as hf:
+    offset = np.array(hf.get('label'))[0, 0, 0, 0]
     left_ims = np.array(hf.get('left'))
     right_ims = np.array(hf.get('right'))
     for v in xrange(10):

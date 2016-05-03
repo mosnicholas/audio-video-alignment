@@ -1,7 +1,6 @@
 
 import os
 import csv
-import lmdb
 import h5py
 import shutil
 import argparse
@@ -86,22 +85,23 @@ def create_trump_dataset(movie_path, target_folder):
     clip.audio.write_audiofile(audio_outfile, codec='aac')
   return True
 
-def create_movie_process(video, target_folder, start_i, end_i, first_i, pnum, saved_frames):
+def create_movie_process(video, target_folder, start_i, end_i, first_i, pnum, saved_frames, fps):
   video_path = os.path.join(target_folder, 'frame-%06d.jpg')
   for i in xrange(start_i, end_i):
     shifted = i - first_i
     num_processed = i - start_i
     if shifted in saved_frames: continue
-    video.save_frame(video_path % shifted, i)
+    video.save_frame(video_path % shifted, i/fps)
     if (num_processed % 500 == 0): print '%d frames saved on process %d' % (num_processed, pnum)
   print 'process %d completed' % pnum
 
 def create_movie_dataset(movie_path, target_folder):
   if not os.path.isdir(target_folder): os.makedirs(target_folder)
   video = VideoFileClip(movie_path)
-  num_frames = int(video.fps * video.duration)
-  video = video.set_fps(1).set_duration(num_frames).resize(0.25)
-  first_frame = 650
+  fps = video.fps
+  num_frames = int(fps * video.duration)
+  video = video.resize(0.25)
+  first_frame = 700
   num_cpus = multiprocessing.cpu_count()
 
   saved_frames = set(map(lambda x: int(x) if x else 0, map(lambda f: ''.join(x for x in f if x.isdigit()), os.listdir(target_folder))))
@@ -118,94 +118,16 @@ def create_movie_dataset(movie_path, target_folder):
     print start_i, end_i
     multiprocessing.Process(
       target=create_movie_process,
-      args=(video, target_folder, start_i, end_i, first_frame, i, saved_frames)
+      args=(video, target_folder, start_i, end_i, first_frame, i, saved_frames, fps)
     ).start()
 
   return True
 
-def load_single_datum_into_lmdb(frames_train_path, labels_train_path, frames_test_path, labels_test_path, shape, offsets, train_values, frame_paths, offset_start, offset_end, pnum):
-  stacked = np.zeros((shape[0], shape[1], 20))
-  prev_stacked = np.zeros((shape[0], shape[1], 9))
-
-  for i in xrange(9):
-    prev_stacked[:, :, i] = greyscale(imread(frame_paths % (i + offset_start)))
-
-  frames_train = lmdb.open(frames_train_path, map_size=int(1e12))
-  labels_train = lmdb.open(labels_train_path, map_size=int(1e12))
-  frames_test = lmdb.open(frames_test_path, map_size=int(1e12))
-  labels_test = lmdb.open(labels_test_path, map_size=int(1e12))
-
-  with frames_train.begin(write=True, buffers=True) as frames_train_writer, \
-    labels_train.begin(write=True, buffers=True) as labels_train_writer, \
-    frames_test.begin(write=True, buffers=True) as frames_test_writer, \
-    labels_test.begin(write=True, buffers=True) as labels_test_writer:
-
-    for split in xrange(offset_start, offset_end):
-      stacked[:, :, 10:] = 0
-      shifted = split - offset_start
-      db_entry_title = str(split)
-      stacked[:, :, :9] = prev_stacked
-      stacked[:, :, 9] = greyscale(imread(frame_paths % (split + 9)))
-      prev_stacked = stacked[:, :, 1:10]
-      stacked[:, :, 10:] = stacked[:, :, offsets[shifted] - 1:9 + offsets[shifted]]
-      stacked_data = caffe.io.array_to_datum(stacked)
-
-      if train_values[shifted]:
-        frames_train_writer.put(db_entry_title, stacked_data.SerializeToString())
-        labels_train_writer.put(db_entry_title, str(offsets[shifted]))
-      else:
-        frames_test_writer.put(db_entry_title, stacked_data.SerializeToString())
-        labels_test_writer.put(db_entry_title, str(offsets[shifted]))
-
-      if shifted % 500 == 0:
-        print '%s splits processed on process %d' % (shifted, pnum)
-
-  print 'process %d completed' % pnum
-
-  frames_train.close()
-  labels_train.close()
-  frames_test.close()
-  labels_test.close()
-
-def load_data_into_lmdb(data_source_folder, target_folder):
-  offset_file_path = os.path.join(data_source_folder, 'offsets.npz')
-  if not os.path.isdir(target_folder): os.makedirs(target_folder)
-  train_test_file = os.path.join(target_folder, 'train_test_indices.npz')
-
-  offsets = np.load(offset_file_path)['offsets']
-  num_splits = len(offsets)
-
-  if os.path.isfile(train_test_file):
-    train = np.load(train_test_file)['train']
-  else:
-    train = np.ones((num_splits), dtype=bool)
-    train[np.random.randint(0, num_splits, 1000)] = False
-    np.savez_compressed(train_test_file, train=train)
-
-  video_title = 'frame-%06d.jpg'
-  frame_paths = os.path.join(data_source_folder, video_title)
-  frame_shape = imread(frame_paths % 1).shape
-
-  num_cpus = multiprocessing.cpu_count()
-
-  indices_per_cpu = num_splits / num_cpus
-  for i in xrange(num_cpus):
-    offset_start = i * indices_per_cpu
-    offset_end = num_splits if i == num_cpus - 1 else (i + 1) * indices_per_cpu
-    multiprocessing.Process(target=load_single_datum_into_lmdb, args=(
-      os.path.join(target_folder, 'frames_train_%d' % i),
-      os.path.join(target_folder, 'labels_train_%d' % i),
-      os.path.join(target_folder, 'frames_test_%d' % i),
-      os.path.join(target_folder, 'labels_test_%d' % i),
-      frame_shape, offsets[offset_start:offset_end], train[offset_start:offset_end],
-      frame_paths, offset_start, offset_end, i
-    )).start()
-
 def load_data_hdf5_process(frame_paths, target_folder, shape, offsets, offset_start, offset_end, saved_files, pnum):
-  loaded_frames = np.zeros((1, 20, shape[0], shape[1]))
+  loaded_frames = np.zeros((1, 1, 20, shape[0], shape[1]))
 
   for i in xrange(20):
-    loaded_frames[0, i, :, :] = greyscale(imread(frame_paths % (i + offset_start)))
+    loaded_frames[0, 0, i, :, :] = greyscale(imread(frame_paths % (i + offset_start)))
   loaded_frames = loaded_frames/loaded_frames.max()
 
   for split in xrange(offset_start, offset_end):
@@ -215,11 +137,11 @@ def load_data_hdf5_process(frame_paths, target_folder, shape, offsets, offset_st
 
     with h5py.File(outfile, 'w') as f:
       f.create_dataset(
-        'left', data=loaded_frames[:, :10, :, :],
+        'left', data=loaded_frames[:, :, :10, :, :],
         compression='gzip', compression_opts=1
       )
       f.create_dataset(
-        'right', data=loaded_frames[:, offsets[shifted]:10 + offsets[shifted], :, :],
+        'right', data=loaded_frames[:, :, offsets[shifted]:10 + offsets[shifted], :, :],
         compression='gzip', compression_opts=1
       )
       label = np.zeros((1, 1, 1, 1))
@@ -229,9 +151,9 @@ def load_data_hdf5_process(frame_paths, target_folder, shape, offsets, offset_st
         compression='gzip', compression_opts=1
       )
 
-    loaded_frames[0, 0:19, :, :] = loaded_frames[0, 1:20, :, :]
-    loaded_frames[0, 19, :, :] = greyscale(imread(frame_paths % (split + 19)))
-    loaded_frames[0, 19, :, :] = loaded_frames[0, 19, :, :]/loaded_frames[0, 19, :, :].max()
+    loaded_frames[0, 0, 0:19, :, :] = loaded_frames[0, 0, 1:20, :, :]
+    loaded_frames[0, 0, 19, :, :] = greyscale(imread(frame_paths % (split + 19)))
+    loaded_frames[0, 0, 19, :, :] = loaded_frames[0, 0, 19, :, :]/loaded_frames[0, 0, 19, :, :].max()
 
     if shifted % 500 == 0:
       print '%s splits processed on process %d' % (shifted, pnum)
@@ -281,7 +203,7 @@ def download_movie():
   return download_raw_youtube_video(MOVIE_ID, args.target_folder, 'hitch_hiker.mp4')
 
 if __name__ == '__main__':
-  # Pipeline: Download movie -> create dataset -> load into lmdb
-  # download_movie()
+  # Pipeline: Download movie -> create dataset -> load into hdf5
+  download_movie()
   # create_movie_dataset(args.data_source, args.target_folder)
-  load_data_into_hdf5(args.data_source, args.target_folder)
+  # load_data_into_hdf5(args.data_source, args.target_folder)
