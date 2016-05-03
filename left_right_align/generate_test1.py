@@ -30,7 +30,7 @@ def main():
 		os.mkdir(args.target_folder)
 
 	test_inds_csv_path = os.path.join(args.target_folder, 'test_inds.csv')
-	test_inds = random.sample(num_segments_out, num_segments_out/10)
+	test_inds = random.sample(range(num_segments_out), num_segments_out/10)
 	with open(test_inds_csv_path, 'w') as test_inds_csv:
 		w = csv.writer(test_inds_csv)
 		test_inds_to_write = [[ind] for ind in test_inds]
