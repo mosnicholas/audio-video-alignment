@@ -97,7 +97,7 @@ def main():
 				label_mat[0, 0, 0, 0] = offsets[seg1_ind]
 				f['label'] = label_mat
 				label_mat_bin = np.zeros((1, 1, 1, 1))
-				label_mat_bin[0, 0, 0, 0] = offsets_bin[seg1_ind]
+				label_mat_bin[0, 0, 0, 0] = offsets[seg1_ind]
 				f['label_bin'] = label_mat_bin
 				#print("Writing to " + h5_location1)
 
