@@ -11,7 +11,7 @@ layer {
     phase: TRAIN
   }
   hdf5_data_param {
-    source: "/mnt/data/dataset_prepared/examples_train.txt"
+    source: "/mnt/data/test1/examples_train_small.txt"
     batch_size: 64
   }
 }
@@ -25,7 +25,7 @@ layer {
     phase: TEST
   }
   hdf5_data_param {
-    source: "/mnt/data/dataset_prepared/examples_test.txt"
+    source: "/mnt/data/test1/examples_test.txt"
     batch_size: 64
   }
 }
