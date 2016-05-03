@@ -113,7 +113,7 @@ def main():
 				label_mat[0, 0, 0, 0] = offsets[seg2_ind]
 				f['label'] = label_mat
 				label_mat_bin = np.zeros((1, 1, 1, 1))
-				label_mat_bin[0, 0, 0, 0] = offsets_bin[seg2_ind]
+				label_mat_bin[0, 0, 0, 0] = offsets[seg2_ind]
 				f['label_bin'] = label_mat_bin
 
 			if in_train[seg2_ind]:
