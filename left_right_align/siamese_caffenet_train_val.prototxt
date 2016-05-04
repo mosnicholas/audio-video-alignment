@@ -42,11 +42,6 @@ layer {
     lr_mult: 1
     decay_mult: 1
   }
-  param {
-    name: "conv1_b"
-    lr_mult: 2
-    decay_mult: 0
-  }
   convolution_param {
     num_output: 100
     kernel_size: 1
