@@ -14,10 +14,11 @@ parser.add_argument('--snapshot_name', default='',
 args = parser.parse_args()
 
 def test2_solver():
-	solver = caffe.SGDSolver('./siamese_caffenet_solver.prototxt')
-	solver.restore(os.path.join('/mnt/data/snapshots', args.snapshot_name))
+	#solver = caffe.SGDSolver('./siamese_caffenet_solver.prototxt')
+	#solver.restore(os.path.join('/mnt/data/snapshots', args.snapshot_name))
+	net = caffe.Net('./siamese_caffenet_deploy.prototxt', '/mnt/data/snapshots/test1_iter_3501.caffemodel', Caffe.TEST)
 
-	asc = np.tile(np.linspace(0, 1, num=10).reshape((1, 1, 10, 1, 1)), (64, 1, 1, 96, 64))
+	asc = np.tile(np.linspace(0, 1, num=10).reshape((1, 1, 10, 1, 1)), (1, 1, 1, 96, 64))
 
 	for _ in range(1):
 		min_frame1 = np.random.randint(255)
@@ -44,20 +45,20 @@ def test2_solver():
 		stacked_left2 *= 1.0/255
 		stacked_right2 *= 1.0/255
 
-		solver.net.blobs['left'].data[...] = stacked_left1
+		net.blobs['left'].data[...] = stacked_left1
 		print(stacked_left1)
-		solver.net.blobs['right'].data[...] = stacked_right1
+		net.blobs['right'].data[...] = stacked_right1
 		print(stacked_right1)
-		solver.net.forward()
-		result = solver.net.blobs['fc8'].data
+		net.forward()
+		result = net.blobs['fc8'].data
 		print("Expected {:d}, got {:s}.".format(0, result))
 
-		solver.net.blobs['left'].data[...] = stacked_left2
+		net.blobs['left'].data[...] = stacked_left2
 		print(stacked_left1)
-		solver.net.blobs['right'].data[...] = stacked_right2
+		net.blobs['right'].data[...] = stacked_right2
 		print(stacked_right1)
-		solver.net.forward()
-		result = solver.net.blobs['fc8'].data
+		net.forward()
+		result = net.blobs['fc8'].data
 		print("Expected {:d}, got {:s}.".format(1, result))
 
 test2_solver()
