@@ -48,8 +48,8 @@ layer {
     kernel_size: 9
     kernel_size: 9
     stride: 1
-    stride: 2
-    stride: 2
+    stride: 4
+    stride: 4
     bias_term: false
     weight_filler {
       type: "gaussian"
@@ -326,8 +326,8 @@ layer {
     kernel_size: 9
     kernel_size: 9
     stride: 1
-    stride: 2
-    stride: 2
+    stride: 4
+    stride: 4
     bias_term: false
     weight_filler {
       type: "gaussian"
