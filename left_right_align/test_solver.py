@@ -49,10 +49,10 @@ def test2_solver():
 		fig = plt.figure()
 		for frame_ind in range(0, 10):
 			sub = fig.add_subplot(2, 11, frame_ind+1)
-			plt.imshow(stacked_left1[0, 0, frame_ind, :, :])
+			plt.imshow(stacked_left1[0, 0, frame_ind, :, :], vmin=0, vmax=1, cmap='gray')
 			sub.set_title('Frame {:d}'.format(frame_ind+1))
 			sub = fig.add_subplot(2, 11, 12 + frame_ind)
-			plt.imshow(stacked_right1[0, 0, frame_ind, :, :])
+			plt.imshow(stacked_right1[0, 0, frame_ind, :, :], vmin=0, vmax=1, cmap='gray')
 			sub.set_title('Frame {:d}'.format(frame_ind+1))
 
 		stacked_left1 *= 1.0/255
