@@ -66,12 +66,12 @@ def test2_solver():
 		#print(stacked_right1)
 		net.forward()
 		result = net.blobs['activations'].data
+		print("Expected {:d}, got {:s}.".format(0, result))
 		sub = fig.add_subplot(2, 11, 11)
 		plt.bar(1, result[0], .35, color='r')
 		plt.bar(1.35, result[1], .35, color='y')
 		sub.set_ylabel('Activations')
 		sub.set_xticklabels(('left faster', 'right faster'))
-		print("Expected {:d}, got {:s}.".format(0, result))
 		plt.show()
 
 		net.blobs['left'].data[...] = stacked_left2
