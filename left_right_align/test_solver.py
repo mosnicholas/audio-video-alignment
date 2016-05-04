@@ -48,14 +48,16 @@ def test2_solver():
 		print(stacked_left1)
 		solver.net.blobs['right'].data[...] = stacked_right1
 		print(stacked_right1)
-		result = solver.net.forward()
+		solver.net.forward()
+		result = solver.net.blobs['fc8'].data
 		print("Expected {:d}, got {:s}.".format(0, result))
 
 		solver.net.blobs['left'] = stacked_left2
 		print(stacked_left1)
 		solver.net.blobs['right'] = stacked_right2
 		print(stacked_right1)
-		result = solver.net.forward()
+		solver.net.forward()
+		result = solver.net.blobs['fc8'].data
 		print("Expected {:d}, got {:s}.".format(1, result))
 
 test2_solver()
