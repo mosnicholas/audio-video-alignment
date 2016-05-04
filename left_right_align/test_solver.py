@@ -55,3 +55,5 @@ def test2_solver():
 		print(stacked_right1)
 		result = solver.net.forward()
 		print("Expected {:d}, got {:d}.".format(1, result))
+
+test2_solver()
