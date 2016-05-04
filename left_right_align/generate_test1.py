@@ -24,7 +24,7 @@ def rgb2gray(rgb):
 
 
 def main():
-	num_segments_out = 20
+	num_segments_out = 64
 
 	if not os.path.isdir(args.target_folder):
 		os.mkdir(args.target_folder)
