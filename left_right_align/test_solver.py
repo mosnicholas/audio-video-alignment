@@ -23,7 +23,7 @@ def test2_solver():
 		min_frame2 = np.random.randint(255)
 		max_frame2 = np.random.randint(min_frame1 + 1, 256)
 		range2 = max_frame2 - min_frame2
-		if range1 > range2
+		if range1 > range2:
 			greater = (min_frame1, range1)
 			lesser = (min_frame2, range2)
 		else:
