@@ -195,6 +195,53 @@ def load_data_into_hdf5(data_source_folder, target_folder):
       offsets[offset_start:offset_end], offset_start, offset_end,
       saved_files, i
     )).start()
+
+def create_and_load_synthetic_dataset(target_folder):
+  if not os.path.isdir(target_folder): os.makedirs(target_folder)
+  
+  training_examples = os.path.join(target_folder, 'training_examples.txt')
+  test_examples = os.path.join(target_folder, 'test_examples.txt')
+  hdf5_file_name = os.path.join(target_folder, 'synthetic-frame-%05d.h5')
+
+  num_frames = 50000
+  offsets = np.random.randint(0, 10, num_frames)
+  train = np.ones((num_frames), dtype=bool)
+  train[np.random.randint(0, num_frames, int(num_frames * 0.2))] = False
+  np.savetxt(training_examples, map(lambda x: hdf5_file_name % x, np.where(train==True)[0]), fmt="%s")
+  np.savetxt(test_examples, map(lambda x: hdf5_file_name % x, np.where(train==False)[0]), fmt="%s")
+
+  height, width = 90, 120
+  white_frame = np.ones((height, width))
+  black_frame = np.zeros((height, width))
+  right = np.zeros((1, 1, 10, height, width))
+  right[0, 0, 0, :, :] = white_frame
+  left = np.zeros((1, 1, 10, height, width))
+  label = np.zeros((1, 1, 1, 1))
+  for i in xrange(num_frames):
+    offset = offsets[i]
+    left[0, 0, offset, :, :] = white_frame
+    label[0, 0, 0, 0] = offset
+
+    with h5py.File(hdf5_file_name % i, 'w') as hf:
+      hf.create_dataset(
+        'left', data=left,
+        compression='gzip', compression_opts=1
+      )
+      hf.create_dataset(
+        'right', data=right,
+        compression='gzip', compression_opts=1
+      )
+      hf.create_dataset(
+        'label', data=label,
+        compression='gzip', compression_opts=1
+      )
+
+    left[0, 0, offset, :, :] = black_frame
+
+    if i % 500 == 0: print '%d frames written' % i
+
+  return True
+
     
 def download_trump():
   return download_raw_youtube_video(TRUMP_ID, args.target_folder, 'china.mp4', True)
@@ -204,6 +251,7 @@ def download_movie():
 
 if __name__ == '__main__':
   # Pipeline: Download movie -> create dataset -> load into hdf5
-  download_movie()
+  # download_movie()
   # create_movie_dataset(args.data_source, args.target_folder)
   # load_data_into_hdf5(args.data_source, args.target_folder)
+  create_and_load_synthetic_dataset(args.target_folder)
