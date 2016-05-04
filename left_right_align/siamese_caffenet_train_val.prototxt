@@ -90,11 +90,6 @@ layer {
     lr_mult: 1
     decay_mult: 1
   }
-  param {
-    name: "conv2_b"
-    lr_mult: 2
-    decay_mult: 0
-  }
   convolution_param {
     num_output: 256
     kernel_size: 1
@@ -143,11 +138,6 @@ layer {
     lr_mult: 1
     decay_mult: 1
   }
-  param {
-    name: "conv3_b"
-    lr_mult: 2
-    decay_mult: 0
-  }
   convolution_param {
     num_output: 286
     kernel_size: 1
@@ -193,11 +183,6 @@ layer {
     lr_mult: 1
     decay_mult: 1
   }
-  param {
-    name: "conv4_b"
-    lr_mult: 2
-    decay_mult: 0
-  }
   convolution_param {
     num_output: 384
     pad: 1
@@ -240,11 +225,6 @@ layer {
     name: "conv5_w"
     lr_mult: 1
     decay_mult: 1
-  }
-  param {
-    name: "conv5_b"
-    lr_mult: 2
-    decay_mult: 0
   }
   convolution_param {
     num_output: 256
@@ -340,11 +320,6 @@ layer {
     lr_mult: 1
     decay_mult: 1
   }
-  param {
-    name: "conv1_b"
-    lr_mult: 2
-    decay_mult: 0
-  }
   convolution_param {
     num_output: 100
     kernel_size: 1
@@ -392,11 +367,6 @@ layer {
     name: "conv2_w"
     lr_mult: 1
     decay_mult: 1
-  }
-  param {
-    name: "conv2_b"
-    lr_mult: 2
-    decay_mult: 0
   }
   convolution_param {
     num_output: 256
@@ -447,11 +417,6 @@ layer {
     lr_mult: 1
     decay_mult: 1
   }
-  param {
-    name: "conv3_b"
-    lr_mult: 2
-    decay_mult: 0
-  }
   convolution_param {
     num_output: 286
     kernel_size: 1
@@ -497,11 +462,6 @@ layer {
     lr_mult: 1
     decay_mult: 1
   }
-  param {
-    name: "conv4_b"
-    lr_mult: 2
-    decay_mult: 0
-  }
   convolution_param {
     num_output: 384
     pad: 1
@@ -545,11 +505,6 @@ layer {
     name: "conv5_w"
     lr_mult: 1
     decay_mult: 1
-  }
-  param {
-    name: "conv5_b"
-    lr_mult: 2
-    decay_mult: 0
   }
   convolution_param {
     num_output: 256
