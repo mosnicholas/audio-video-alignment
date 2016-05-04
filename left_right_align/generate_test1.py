@@ -77,27 +77,32 @@ def main():
 			#print(np.shape(curr_left_frames))
 			#print(np.shape(curr_left_frames[:20:2,:,:]))
 			#print(np.shape(stacked_left[0, :, :, :]))
-			min_frame = np.random.randint(255)
-			max_frame = np.random.randint(min_frame + 1, 256)
-			stacked_left = asc * (max_frame - min_frame) + min_frame
-			stacked_right = np.copy(stacked_left)
-			assert np.max(stacked_left) == max_frame
-			assert np.min(stacked_left) == min_frame
-			min_frame = np.random.randint(255)
-			max_frame = np.random.randint(min_frame + 1, 256)
-			stacked_offset = asc * (max_frame - min_frame) + min_frame
+			min_frame1 = np.random.randint(255)
+			max_frame1 = np.random.randint(min_frame + 1, 256)
+			range1 = max_frame1 - min_frame1
+			min_frame2 = np.random.randint(255)
+			max_frame2 = np.random.randint(min_frame + 1, 256)
+			range2 = max_frame2 - min_frame2
+			if (range1 > range2): # 1 increases faster
+				stacked_left1 = asc * (range1) + min_frame1
+				stacked_right1 = asc * (range2) + min_frame2
 
-			assert np.max(stacked_offset) == max_frame
-			assert np.min(stacked_offset) == min_frame
+				stacked_left2 = asc * (range2) + min_frame2
+				stacked_right2 = asc * (range1) + min_frame1
+			else:
+				stacked_left1 = asc * (range2) + min_frame2
+				stacked_right1 = asc * (range1) + min_frame1
 
+				stacked_left2 = asc * (range1) + min_frame1
+				stacked_right2 = asc * (range2) + min_frame2
 
 			stacked_left *= 1.0/255
 			stacked_right *= 1.0/255
 			stacked_offset *= 1.0/255
 
 			with h5py.File(h5_location1, 'w') as f:
-				f['left'] = stacked_left
-				f['right'] = stacked_right
+				f['left'] = stacked_left1
+				f['right'] = stacked_right1
 				label_mat = np.zeros((1, 1, 1, 1))
 				label_mat[0, 0, 0, 0] = offsets[seg1_ind]
 				f['label'] = label_mat
@@ -112,8 +117,8 @@ def main():
 				filenames_test.append(h5_location1)
 
 			with h5py.File(h5_location2, 'w') as f:
-				f['left'] = stacked_left
-				f['right'] = stacked_offset
+				f['left'] = stacked_left2
+				f['right'] = stacked_right2
 				label_mat = np.zeros((1, 1, 1, 1))
 				label_mat[0, 0, 0, 0] = offsets[seg2_ind]
 				f['label'] = label_mat
@@ -126,7 +131,7 @@ def main():
 			else:
 				filenames_test.append(h5_location2)
 
-			if seg1_ind % 100 == 0 or seg2_ind % 100 == 0 or frame_ind == num_segments_out - 2:
+			if seg1_ind % 100 == 98 or seg2_ind % 100 == 0 or frame_ind == num_segments_out - 2:
 				print str(seg2_ind+1) + ' segments processed...'
 				with open(filenames_train_path, 'a') as f:
 					for filename_train in filenames_train:
