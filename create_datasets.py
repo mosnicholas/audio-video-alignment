@@ -198,13 +198,16 @@ def load_data_into_hdf5(data_source_folder, target_folder):
 
 def create_and_load_synthetic_dataset(target_folder):
   if not os.path.isdir(target_folder): os.makedirs(target_folder)
-  
+
   training_examples = os.path.join(target_folder, 'training_examples.txt')
   test_examples = os.path.join(target_folder, 'test_examples.txt')
   hdf5_file_name = os.path.join(target_folder, 'synthetic-frame-%05d.h5')
 
   num_frames = 50000
-  offsets = np.random.randint(0, 10, num_frames)
+  left_offsets = np.random.randint(0, 10, num_frames)
+  right_offsets = np.random.randint(0, 10, num_frames)
+  delta = np.abs(left_offsets - right_offsets)
+
   train = np.ones((num_frames), dtype=bool)
   train[np.random.randint(0, num_frames, int(num_frames * 0.2))] = False
   np.savetxt(training_examples, map(lambda x: hdf5_file_name % x, np.where(train==True)[0]), fmt="%s")
@@ -214,13 +217,14 @@ def create_and_load_synthetic_dataset(target_folder):
   white_frame = np.ones((height, width))
   black_frame = np.zeros((height, width))
   right = np.zeros((1, 1, 10, height, width))
-  right[0, 0, 0, :, :] = white_frame
   left = np.zeros((1, 1, 10, height, width))
   label = np.zeros((1, 1, 1, 1))
   for i in xrange(num_frames):
-    offset = offsets[i]
-    left[0, 0, offset, :, :] = white_frame
-    label[0, 0, 0, 0] = offset
+    left_offset = left_offsets[i]
+    right_offset = right_offsets[i]
+    left[0, 0, left_offset, :, :] = white_frame
+    right[0, 0, right_offset, :, :] = white_frame
+    label[0, 0, 0, 0] = delta[i]
 
     with h5py.File(hdf5_file_name % i, 'w') as hf:
       hf.create_dataset(
@@ -236,7 +240,8 @@ def create_and_load_synthetic_dataset(target_folder):
         compression='gzip', compression_opts=1
       )
 
-    left[0, 0, offset, :, :] = black_frame
+    left[0, 0, left_offset, :, :] = black_frame
+    right[0, 0, right_offset, :, :] = black_frame
 
     if i % 500 == 0: print '%d frames written' % i
 

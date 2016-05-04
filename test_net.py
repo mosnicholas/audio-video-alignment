@@ -2,7 +2,7 @@ import caffe
 import h5py
 import numpy as np
 
-net = caffe.Net('/home/ubuntu/video_align/videonet_deploy.prototxt', '/mnt/data/snapshots/videonet_iter_5000.caffemodel', caffe.TEST)
+net = caffe.Net('/home/ubuntu/video_align/videonet_deploy.prototxt', '/mnt/data/snapshots/videonet_iter_530.caffemodel', caffe.TEST)
 
 def test_frame(frame_num):
   frame_path = '/mnt/data/clipped/hh_data/frame-%06d.h5' % frame_num
