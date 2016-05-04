@@ -3,12 +3,14 @@ name: "siamese_caffenet_deploy"
 input: "left"
 input_shape: {
   dim: 1
+  dim: 1
   dim: 10
   dim: 96
   dim: 64
 }
 input: "right"
 input_shape: {
+  dim: 1
   dim: 1
   dim: 10
   dim: 96
@@ -22,10 +24,24 @@ layer {
   type: "Convolution"
   bottom: "left"
   top: "conv1"
+  param {
+    name: "conv1_w"
+    lr_mult: 1
+    decay_mult: 1
+  }
   convolution_param {
     num_output: 100
-    kernel_size: 5
-    stride: 2
+    kernel_size: 1
+    kernel_size: 9
+    kernel_size: 9
+    stride: 1
+    stride: 4
+    stride: 4
+    bias_term: false
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
   }
 }
 layer {
@@ -34,37 +50,46 @@ layer {
   bottom: "conv1"
   top: "conv1"
 }
+
 layer {
-  name: "pool1"
-  type: "Pooling"
+  name: "bn1"
+  type: "BatchNorm"
   bottom: "conv1"
-  top: "pool1"
-  pooling_param {
-    pool: MAX
-    kernel_size: 2
-    stride: 2
+  top: "bn1"
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
   }
 }
-layer {
-  name: "norm1"
-  type: "LRN"
-  bottom: "pool1"
-  top: "norm1"
-  lrn_param {
-    local_size: 5
-    alpha: 0.0001
-    beta: 0.75
-  }
-}
+
 layer {
   name: "conv2"
   type: "Convolution"
-  bottom: "norm1"
+  bottom: "bn1"
   top: "conv2"
+  param {
+    name: "conv2_w"
+    lr_mult: 1
+    decay_mult: 1
+  }
   convolution_param {
     num_output: 256
-    pad: 2
+    kernel_size: 1
     kernel_size: 4
+    kernel_size: 4
+    stride: 1
+    stride: 2
+    stride: 2
+    bias_term: false
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
   }
 }
 layer {
@@ -73,37 +98,43 @@ layer {
   bottom: "conv2"
   top: "conv2"
 }
+
 layer {
-  name: "pool2"
-  type: "Pooling"
+  name: "bn2"
+  type: "BatchNorm"
   bottom: "conv2"
-  top: "pool2"
-  pooling_param {
-    pool: MAX
-    kernel_size: 2
-    stride: 2
+  top: "bn2"
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
   }
 }
-layer {
-  name: "norm2"
-  type: "LRN"
-  bottom: "pool2"
-  top: "norm2"
-  lrn_param {
-    local_size: 5
-    alpha: 0.0001
-    beta: 0.75
-  }
-}
+
 layer {
   name: "conv3"
   type: "Convolution"
-  bottom: "norm2"
+  bottom: "bn2"
   top: "conv3"
+  param {
+    name: "conv3_w"
+    lr_mult: 1
+    decay_mult: 1
+  }
   convolution_param {
-    num_output: 384
-    pad: 1
+    num_output: 286
+    kernel_size: 1
     kernel_size: 3
+    kernel_size: 3
+    bias_term: false
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
   }
 }
 layer {
@@ -112,15 +143,42 @@ layer {
   bottom: "conv3"
   top: "conv3"
 }
+
+layer {
+  name: "bn3"
+  type: "BatchNorm"
+  bottom: "conv3"
+  top: "bn3"
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+}
+
 layer {
   name: "conv4"
   type: "Convolution"
-  bottom: "conv3"
+  bottom: "bn3"
   top: "conv4"
+  param {
+    name: "conv4_w"
+    lr_mult: 1
+    decay_mult: 1
+  }
   convolution_param {
     num_output: 384
     pad: 1
     kernel_size: 3
+    bias_term: false
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
   }
 }
 layer {
@@ -129,15 +187,43 @@ layer {
   bottom: "conv4"
   top: "conv4"
 }
+
+layer {
+  name: "bn4"
+  type: "BatchNorm"
+  bottom: "conv4"
+  top: "bn4"
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+}
 layer {
   name: "conv5"
   type: "Convolution"
-  bottom: "conv4"
+  bottom: "bn4"
   top: "conv5"
+  param {
+    name: "conv5_w"
+    lr_mult: 1
+    decay_mult: 1
+  }
   convolution_param {
     num_output: 256
     pad: 1
     kernel_size: 3
+    kernel_size: 10
+    kernel_size: 6
+    bias_term: false
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
   }
 }
 layer {
@@ -147,23 +233,45 @@ layer {
   top: "conv5"
 }
 layer {
-  name: "pool5"
-  type: "Pooling"
+  name: "bn5"
+  type: "BatchNorm"
   bottom: "conv5"
-  top: "pool5"
-  pooling_param {
-    pool: MAX
-    kernel_size: 2
-    stride: 2
+  top: "bn5"
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
   }
 }
 layer {
   name: "fc6"
   type: "InnerProduct"
-  bottom: "pool5"
+  bottom: "bn5"
   top: "fc6"
+  param {
+    name: "fc6_w"
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    name: "fc6_b"
+    lr_mult: 2
+    decay_mult: 0
+  }
   inner_product_param {
     num_output: 4096
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 1
+    }
   }
 }
 layer {
@@ -173,30 +281,47 @@ layer {
   top: "fc6"
 }
 layer {
-  name: "drop6"
-  type: "Dropout"
+  name: "bn6"
+  type: "BatchNorm"
   bottom: "fc6"
-  top: "fc6"
-  dropout_param {
-    dropout_ratio: 0.5
+  top: "bn6"
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
   }
 }
 
-# Replica of Other CaffeNet
-
-# paste a copy of the above net here.
-# change layer names, but keep param names the same.
-
+# Replica Network
+# Name params same as previous network.
 
 layer {
   name: "conv1_rep"
   type: "Convolution"
   bottom: "right"
   top: "conv1_rep"
+  param {
+    name: "conv1_w"
+    lr_mult: 1
+    decay_mult: 1
+  }
   convolution_param {
     num_output: 100
-    kernel_size: 5
-    stride: 2
+    kernel_size: 1
+    kernel_size: 9
+    kernel_size: 9
+    stride: 1
+    stride: 4
+    stride: 4
+    bias_term: false
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
   }
 }
 layer {
@@ -205,37 +330,46 @@ layer {
   bottom: "conv1_rep"
   top: "conv1_rep"
 }
+
 layer {
-  name: "pool1_rep"
-  type: "Pooling"
+  name: "bn1_rep"
+  type: "BatchNorm"
   bottom: "conv1_rep"
-  top: "pool1_rep"
-  pooling_param {
-    pool: MAX
-    kernel_size: 2
-    stride: 2
+  top: "bn1_rep"
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
   }
 }
-layer {
-  name: "norm1_rep"
-  type: "LRN"
-  bottom: "pool1_rep"
-  top: "norm1_rep"
-  lrn_param {
-    local_size: 5
-    alpha: 0.0001
-    beta: 0.75
-  }
-}
+
 layer {
   name: "conv2_rep"
   type: "Convolution"
-  bottom: "norm1_rep"
+  bottom: "bn1_rep"
   top: "conv2_rep"
+  param {
+    name: "conv2_w"
+    lr_mult: 1
+    decay_mult: 1
+  }
   convolution_param {
     num_output: 256
-    pad: 2
+    kernel_size: 1
     kernel_size: 4
+    kernel_size: 4
+    stride: 1
+    stride: 2
+    stride: 2
+    bias_term: false   
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
   }
 }
 layer {
@@ -244,37 +378,44 @@ layer {
   bottom: "conv2_rep"
   top: "conv2_rep"
 }
+
 layer {
-  name: "pool2_rep"
-  type: "Pooling"
+  name: "bn2_rep"
+  type: "BatchNorm"
   bottom: "conv2_rep"
-  top: "pool2_rep"
-  pooling_param {
-    pool: MAX
-    kernel_size: 2
-    stride: 2
+  top: "bn2_rep"
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
   }
 }
-layer {
-  name: "norm2_rep"
-  type: "LRN"
-  bottom: "pool2_rep"
-  top: "norm2_rep"
-  lrn_param {
-    local_size: 5
-    alpha: 0.0001
-    beta: 0.75
-  }
-}
+
+
 layer {
   name: "conv3_rep"
   type: "Convolution"
-  bottom: "norm2_rep"
+  bottom: "bn2_rep"
   top: "conv3_rep"
+  param {
+    name: "conv3_w"
+    lr_mult: 1
+    decay_mult: 1
+  }
   convolution_param {
-    num_output: 384
-    pad: 1
+    num_output: 286
+    kernel_size: 1
     kernel_size: 3
+    kernel_size: 3
+    bias_term: false
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
   }
 }
 layer {
@@ -283,15 +424,42 @@ layer {
   bottom: "conv3_rep"
   top: "conv3_rep"
 }
+
+layer {
+  name: "bn3_rep"
+  type: "BatchNorm"
+  bottom: "conv3_rep"
+  top: "bn3_rep"
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+}
+
 layer {
   name: "conv4_rep"
   type: "Convolution"
-  bottom: "conv3_rep"
+  bottom: "bn3_rep"
   top: "conv4_rep"
+  param {
+    name: "conv4_w"
+    lr_mult: 1
+    decay_mult: 1
+  }
   convolution_param {
     num_output: 384
     pad: 1
     kernel_size: 3
+    bias_term: false
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
   }
 }
 layer {
@@ -300,15 +468,44 @@ layer {
   bottom: "conv4_rep"
   top: "conv4_rep"
 }
+
+layer {
+  name: "bn4_rep"
+  type: "BatchNorm"
+  bottom: "conv4_rep"
+  top: "bn4_rep"
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+}
+
 layer {
   name: "conv5_rep"
   type: "Convolution"
-  bottom: "conv4_rep"
+  bottom: "bn4_rep"
   top: "conv5_rep"
+  param {
+    name: "conv5_w"
+    lr_mult: 1
+    decay_mult: 1
+  }
   convolution_param {
     num_output: 256
     pad: 1
     kernel_size: 3
+    kernel_size: 10
+    kernel_size: 6
+    bias_term: false
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
   }
 }
 layer {
@@ -317,24 +514,48 @@ layer {
   bottom: "conv5_rep"
   top: "conv5_rep"
 }
+
 layer {
-  name: "pool5_rep"
-  type: "Pooling"
+  name: "bn5_rep"
+  type: "BatchNorm"
   bottom: "conv5_rep"
-  top: "pool5_rep"
-  pooling_param {
-    pool: MAX
-    kernel_size: 2
-    stride: 2
+  top: "bn5_rep"
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
   }
 }
+
 layer {
   name: "fc6_rep"
   type: "InnerProduct"
-  bottom: "pool5_rep"
+  bottom: "bn5_rep"
   top: "fc6_rep"
+  param {
+    name: "fc6_w"
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    name: "fc6_b"
+    lr_mult: 2
+    decay_mult: 0
+  }
   inner_product_param {
     num_output: 4096
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 1
+    }
   }
 }
 layer {
@@ -344,12 +565,18 @@ layer {
   top: "fc6_rep"
 }
 layer {
-  name: "drop6_rep"
-  type: "Dropout"
+  name: "bn6_rep"
+  type: "BatchNorm"
   bottom: "fc6_rep"
-  top: "fc6_rep"
-  dropout_param {
-    dropout_ratio: 0.5
+  top: "bn6_rep"
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
   }
 }
 
@@ -358,8 +585,8 @@ layer {
 layer {
   name: "recombine"
   type: "Concat"
-  bottom: "fc6"
-  bottom: "fc6_rep"
+  bottom: "bn6"
+  bottom: "bn6_rep"
   top: "recombine"
   concat_param {
     axis: 1
@@ -371,8 +598,24 @@ layer {
   type: "InnerProduct"
   bottom: "recombine"
   top: "fc7"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
   inner_product_param {
     num_output: 256
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 1
+    }
   }
 }
 layer {
@@ -396,8 +639,24 @@ layer {
   type: "InnerProduct"
   bottom: "fc7"
   top: "fc8"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
   inner_product_param {
-    num_output: 1
+    num_output: 2
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
   }
 }
 
