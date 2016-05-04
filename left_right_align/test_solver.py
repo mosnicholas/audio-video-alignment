@@ -14,7 +14,7 @@ parser.add_argument('--snapshot_name', default='',
 args = parser.parse_args()
 
 def test2_solver():
-	solver = caffe.SGDSolver('./train_siamese_caffenet.prototxt')
+	solver = caffe.SGDSolver('./siamese_caffenet_solver.prototxt')
 	solver.restore(os.path.join('/mnt/data/snapshots', args.snapshot_name))
 
 	for _ in range(1):
