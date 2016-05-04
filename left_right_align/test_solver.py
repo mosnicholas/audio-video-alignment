@@ -25,7 +25,7 @@ def test2_solver():
 		max_frame1 = np.random.randint(min_frame1 + 1, 256)
 		range1 = max_frame1 - min_frame1
 		min_frame2 = np.random.randint(255)
-		max_frame2 = np.random.randint(min_frame1 + 1, 256)
+		max_frame2 = np.random.randint(min_frame2 + 1, 256)
 		range2 = max_frame2 - min_frame2
 		if range1 > range2:
 			greater = (min_frame1, range1)
@@ -54,7 +54,7 @@ def test2_solver():
 		net.blobs['right'].data[...] = stacked_right1
 		#print(stacked_right1)
 		net.forward()
-		result = net.blobs['out'].data
+		result = net.blobs['activations'].data
 		print("Expected {:d}, got {:s}.".format(0, result))
 
 		net.blobs['left'].data[...] = stacked_left2
@@ -62,7 +62,7 @@ def test2_solver():
 		net.blobs['right'].data[...] = stacked_right2
 		#print(stacked_right1)
 		net.forward()
-		result = net.blobs['out'].data
+		result = net.blobs['activations'].data
 		print("Expected {:d}, got {:s}.".format(1, result))
 
 test2_solver()
