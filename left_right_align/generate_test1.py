@@ -24,7 +24,7 @@ def rgb2gray(rgb):
 
 
 def main():
-	num_segments_out = 64
+	num_segments_out = 20000
 
 	if not os.path.isdir(args.target_folder):
 		os.mkdir(args.target_folder)
@@ -127,7 +127,7 @@ def main():
 				filenames_test.append(h5_location2)
 
 			if seg1_ind % 100 == 0 or seg2_ind % 100 == 0 or frame_ind == num_segments_out - 2:
-				print str(seg2_ind) + ' segments processed...'
+				print str(seg2_ind+1) + ' segments processed...'
 				with open(filenames_train_path, 'a') as f:
 					for filename_train in filenames_train:
 						f.write(filename_train + '\n')
