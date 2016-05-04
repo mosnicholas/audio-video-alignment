@@ -78,10 +78,10 @@ def main():
 			#print(np.shape(curr_left_frames[:20:2,:,:]))
 			#print(np.shape(stacked_left[0, :, :, :]))
 			min_frame1 = np.random.randint(255)
-			max_frame1 = np.random.randint(min_frame + 1, 256)
+			max_frame1 = np.random.randint(min_frame1 + 1, 256)
 			range1 = max_frame1 - min_frame1
 			min_frame2 = np.random.randint(255)
-			max_frame2 = np.random.randint(min_frame + 1, 256)
+			max_frame2 = np.random.randint(min_frame1 + 1, 256)
 			range2 = max_frame2 - min_frame2
 			if (range1 > range2): # 1 increases faster
 				stacked_left1 = asc * (range1) + min_frame1
