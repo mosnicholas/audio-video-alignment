@@ -24,7 +24,7 @@ def rgb2gray(rgb):
 
 
 def main():
-	num_segments_out = 20000 
+	num_segments_out = 20
 
 	if not os.path.isdir(args.target_folder):
 		os.mkdir(args.target_folder)
@@ -74,17 +74,22 @@ def main():
 			h5_location2 = os.path.join(args.target_folder, h5_filename2)
 
 			#print(np.shape(curr_left_frames))
-			stacked_left = np.zeros((1, 1, 10, 96, 64))
 			#print(np.shape(curr_left_frames))
 			#print(np.shape(curr_left_frames[:20:2,:,:]))
 			#print(np.shape(stacked_left[0, :, :, :]))
 			min_frame = np.random.randint(255)
 			max_frame = np.random.randint(min_frame + 1, 256)
 			stacked_left = asc * (max_frame - min_frame) + min_frame
-			stacked_right = stacked_left
+			stacked_right = np.copy(stacked_left)
+			assert np.max(stacked_left) == max_frame
+			assert np.min(stacked_left) == min_frame
 			min_frame = np.random.randint(255)
 			max_frame = np.random.randint(min_frame + 1, 256)
 			stacked_offset = asc * (max_frame - min_frame) + min_frame
+
+			assert np.max(stacked_offset) == max_frame
+			assert np.min(stacked_offset) == min_frame
+
 
 			stacked_left *= 1.0/255
 			stacked_right *= 1.0/255
