@@ -96,10 +96,11 @@ def main():
 				stacked_left2 = asc * (range1) + min_frame1
 				stacked_right2 = asc * (range2) + min_frame2
 
-			stacked_left *= 1.0/255
-			stacked_right *= 1.0/255
-			stacked_offset *= 1.0/255
-
+			stacked_left1 *= 1.0/255
+			stacked_right1 *= 1.0/255
+			stacked_left2 *= 1.0/255
+			stacked_right2 *= 1.0/255
+			
 			with h5py.File(h5_location1, 'w') as f:
 				f['left'] = stacked_left1
 				f['right'] = stacked_right1
