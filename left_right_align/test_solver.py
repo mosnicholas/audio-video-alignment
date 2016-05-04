@@ -72,8 +72,8 @@ def test2_solver():
 		plt.bar(1.35, result[0][1], .35, color='y')
 		sub.set_ylabel('Activations')
 		sub.set_xticklabels(('left faster', 'right faster'))
+		plt.imshow(stacked_left1[0, 0, 5, :, :], vmin=0, vmax=1, cmap='gray')
 		plt.show()
-
 		net.blobs['left'].data[...] = stacked_left2
 		#print(stacked_left1)
 		net.blobs['right'].data[...] = stacked_right2
