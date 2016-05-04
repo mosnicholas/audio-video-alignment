@@ -126,7 +126,7 @@ def main():
 			else:
 				filenames_test.append(h5_location2)
 
-			if seg1_ind % 100 == 0 or seg2_ind % 100 == 0 or frame_ind == num_segments_out - 1:
+			if seg1_ind % 100 == 0 or seg2_ind % 100 == 0 or frame_ind == num_segments_out - 2:
 				print str(seg2_ind) + ' segments processed...'
 				with open(filenames_train_path, 'a') as f:
 					for filename_train in filenames_train:
