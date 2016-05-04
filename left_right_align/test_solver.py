@@ -17,7 +17,7 @@ def test2_solver():
 	solver = caffe.SGDSolver('./siamese_caffenet_solver.prototxt')
 	solver.restore(os.path.join('/mnt/data/snapshots', args.snapshot_name))
 
-	asc = np.tile(np.linspace(0, 1, num=10).reshape((1, 1, 10, 1, 1)), (1, 1, 1, 96, 64))
+	asc = np.tile(np.linspace(0, 1, num=10).reshape((1, 1, 10, 1, 1)), (64, 1, 1, 96, 64))
 
 	for _ in range(1):
 		min_frame1 = np.random.randint(255)
@@ -52,9 +52,9 @@ def test2_solver():
 		result = solver.net.blobs['fc8'].data
 		print("Expected {:d}, got {:s}.".format(0, result))
 
-		solver.net.blobs['left'] = stacked_left2
+		solver.net.blobs['left'].data[...] = stacked_left2
 		print(stacked_left1)
-		solver.net.blobs['right'] = stacked_right2
+		solver.net.blobs['right'].data[...] = stacked_right2
 		print(stacked_right1)
 		solver.net.forward()
 		result = solver.net.blobs['fc8'].data
