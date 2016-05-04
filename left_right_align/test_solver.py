@@ -17,6 +17,8 @@ def test2_solver():
 	solver = caffe.SGDSolver('./siamese_caffenet_solver.prototxt')
 	solver.restore(os.path.join('/mnt/data/snapshots', args.snapshot_name))
 
+	asc = np.tile(np.linspace(0, 10, num=10).reshape((1, 1, 10, 1, 1)), (1, 1, 1, 96, 64))
+
 	for _ in range(1):
 		min_frame1 = np.random.randint(255)
 		max_frame1 = np.random.randint(min_frame1 + 1, 256)
