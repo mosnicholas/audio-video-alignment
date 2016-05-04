@@ -48,10 +48,10 @@ def test2_solver():
 		plt.close('all')
 		fig = plt.figure()
 		for frame_ind in range(0, 10):
-			sub = fig.add_subplot(2, 11, frame_ind)
+			sub = fig.add_subplot(2, 11, frame_ind+1)
 			plt.imshow(stacked_left1[0, 0, frame_ind, :, :])
 			sub.set_title('Frame {:d}'.format(frame_ind+1))
-			sub = fig.add_subplot(2, 11, 11 + plot_ind)
+			sub = fig.add_subplot(2, 11, 12 + frame_ind)
 			plt.imshow(stacked_right1[0, 0, frame_ind, :, :])
 			sub.set_title('Frame {:d}'.format(frame_ind+1))
 
