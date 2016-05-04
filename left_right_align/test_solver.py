@@ -47,6 +47,10 @@ def test2_solver():
 
 		plt.close('all')
 		fig = plt.figure()
+
+		plt.imshow(stacked_left1[0, 0, 5, :, :], vmin=0, vmax=1, cmap='gray')
+		plt.show()
+		return True
 		for frame_ind in range(0, 10):
 			sub = fig.add_subplot(2, 11, frame_ind+1)
 			plt.imshow(stacked_left1[0, 0, frame_ind, :, :], vmin=0, vmax=1, cmap='gray')
@@ -72,8 +76,7 @@ def test2_solver():
 		plt.bar(1.35, result[0][1], .35, color='y')
 		sub.set_ylabel('Activations')
 		sub.set_xticklabels(('left faster', 'right faster'))
-		plt.imshow(stacked_left1[0, 0, 5, :, :], vmin=0, vmax=1, cmap='gray')
-		plt.show()
+
 		net.blobs['left'].data[...] = stacked_left2
 		#print(stacked_left1)
 		net.blobs['right'].data[...] = stacked_right2
