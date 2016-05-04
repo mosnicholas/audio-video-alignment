@@ -16,7 +16,7 @@ args = parser.parse_args()
 def test2_solver():
 	#solver = caffe.SGDSolver('./siamese_caffenet_solver.prototxt')
 	#solver.restore(os.path.join('/mnt/data/snapshots', args.snapshot_name))
-	net = caffe.Net('./siamese_caffenet_deploy.prototxt', '/mnt/data/snapshots/test1_iter_3501.caffemodel', caffe.TEST)
+	net = caffe.Net('./siamese_caffenet_deploy.prototxt', os.path.join('/mnt/data/snapshots', args.snapshot_name), caffe.TEST)
 
 	asc = np.tile(np.linspace(0, 1, num=10).reshape((1, 1, 10, 1, 1)), (1, 1, 1, 96, 64))
 
