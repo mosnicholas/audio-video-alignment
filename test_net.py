@@ -42,7 +42,7 @@ def view_side_by_side_hdf5(frame_num):
     a.set_yticklabels([])
   plt.show()
 
-# solver = caffe.SGDSolver('siamese_videonet_solver.prototxt')
+# solver = caffe.SGDSolver('video_align/siamese_videonet_solver.prototxt')
 # solver.restore('/mnt/data/snapshots/videonet_iter_2706.solverstate')
 
 
