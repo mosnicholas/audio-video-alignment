@@ -58,8 +58,7 @@ def main():
 	seg1_ind = 0 # no offset
 	seg2_ind = 1 # offset
 
-	base_asc = [float(num)/9 for num in range(0, 10)]
-	asc = np.tile(np.array(base_asc).reshape((1, 1, 10, 1, 1)), (1, 1, 1, 96, 64))
+	asc = np.tile(np.linspace(0, 10, num=10).reshape((1, 1, 10, 1, 1)), (1, 1, 1, 96, 64))
 
 	for frame_ind in xrange(num_segments_out):
 
@@ -81,26 +80,26 @@ def main():
 			max_frame1 = np.random.randint(min_frame1 + 1, 256)
 			range1 = max_frame1 - min_frame1
 			min_frame2 = np.random.randint(255)
-			max_frame2 = np.random.randint(min_frame1 + 1, 256)
+			max_frame2 = np.random.randint(min_frame2 + 1, 256)
 			range2 = max_frame2 - min_frame2
-			if (range1 > range2): # 1 increases faster
-				stacked_left1 = asc * (range1) + min_frame1
-				stacked_right1 = asc * (range2) + min_frame2
-
-				stacked_left2 = asc * (range2) + min_frame2
-				stacked_right2 = asc * (range1) + min_frame1
+			if range1 > range2
+				greater = (min_frame1, range1)
+				lesser = (min_frame2, range2)
 			else:
-				stacked_left1 = asc * (range2) + min_frame2
-				stacked_right1 = asc * (range1) + min_frame1
+				greater = (min_frame2, range2)
+				lesser = (min_frame1, range1)
 
-				stacked_left2 = asc * (range1) + min_frame1
-				stacked_right2 = asc * (range2) + min_frame2
+			stacked_left1 = asc * greater[1] + greater[0]
+			stacked_right1 = asc * lesser[1] + lesser[0]
+
+			stacked_left2 = asc * lesser[1] + lesser[0]
+			stacked_right2 = asc * greater[1] + greater[0]
 
 			stacked_left1 *= 1.0/255
 			stacked_right1 *= 1.0/255
 			stacked_left2 *= 1.0/255
 			stacked_right2 *= 1.0/255
-			
+
 			with h5py.File(h5_location1, 'w') as f:
 				f['left'] = stacked_left1
 				f['right'] = stacked_right1
