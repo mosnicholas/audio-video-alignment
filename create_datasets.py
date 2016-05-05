@@ -32,6 +32,8 @@ parser.add_argument('--data_source', default=outfolder,
   help='The directory for the dataset.')
 parser.add_argument('--target_folder', default=outfolder,
   help='The directory for the function output.')
+parser.add_argument('--binary_labels', action='store_true', default=False,
+  help='The directory for the function output.')
 args = parser.parse_args()
 
 def greyscale(image):
@@ -95,7 +97,7 @@ def create_movie_process(video, target_folder, start_i, end_i, first_i, pnum, sa
     if (num_processed % 500 == 0): print '%d frames saved on process %d' % (num_processed, pnum)
   print 'process %d completed' % pnum
 
-def create_movie_dataset(movie_path, target_folder):
+def create_movie_dataset(movie_path, target_folder, binary_labels):
   if not os.path.isdir(target_folder): os.makedirs(target_folder)
   video = VideoFileClip(movie_path)
   fps = video.fps
@@ -107,7 +109,8 @@ def create_movie_dataset(movie_path, target_folder):
   saved_frames = set(map(lambda x: int(x) if x else 0, map(lambda f: ''.join(x for x in f if x.isdigit()), os.listdir(target_folder))))
   num_done = len(saved_frames)
   if num_done == 0:
-    offsets = np.random.randint(0, 10, num_frames - first_frame - 20)
+    num_classes = 2 if binary_labels else 10
+    offsets = np.random.randint(0, num_classes, num_frames - first_frame - 20)
     offset_file = os.path.join(target_folder, 'offsets.npz')
     np.savez_compressed(offset_file, offsets=offsets)
 
@@ -123,8 +126,11 @@ def create_movie_dataset(movie_path, target_folder):
 
   return True
 
-def load_data_hdf5_process(frame_paths, target_folder, shape, offsets, offset_start, offset_end, saved_files, pnum):
+def load_data_hdf5_process(frame_paths, target_folder, shape, offsets, offset_start, offset_end, saved_files, pnum, binary_labels):
   loaded_frames = np.zeros((1, 1, 20, shape[0], shape[1]))
+  label = np.zeros((1, 1, 1, 1))
+  if binary_labels:
+    rand_offset = np.random.randint(1, 10, offset_end - offset_start)
 
   for i in xrange(20):
     loaded_frames[0, 0, i, :, :] = greyscale(imread(frame_paths % (i + offset_start)))
@@ -140,11 +146,23 @@ def load_data_hdf5_process(frame_paths, target_folder, shape, offsets, offset_st
         'left', data=loaded_frames[:, :, :10, :, :],
         compression='gzip', compression_opts=1
       )
-      f.create_dataset(
-        'right', data=loaded_frames[:, :, offsets[shifted]:10 + offsets[shifted], :, :],
-        compression='gzip', compression_opts=1
-      )
-      label = np.zeros((1, 1, 1, 1))
+
+      if binary_labels and offsets[shifted]:
+        f.create_dataset(
+          'right', data=loaded_frames[:, :, :10, :, :],
+          compression='gzip', compression_opts=1
+        )
+      elif binary_labels and not offsets[shifted]:
+        f.create_dataset(
+          'right', data=loaded_frames[:, :, rand_offset[shifted]:10 + rand_offset[shifted], :, :],
+          compression='gzip', compression_opts=1
+        )
+      else:
+        f.create_dataset(
+          'right', data=loaded_frames[:, :, offsets[shifted]:10 + offsets[shifted], :, :],
+          compression='gzip', compression_opts=1
+        )
+
       label[0, 0, 0, 0] = offsets[shifted]
       f.create_dataset(
         'label', data=label,
@@ -160,7 +178,7 @@ def load_data_hdf5_process(frame_paths, target_folder, shape, offsets, offset_st
 
   print 'process %d completed' % pnum
 
-def load_data_into_hdf5(data_source_folder, target_folder):
+def load_data_into_hdf5(data_source_folder, target_folder, binary_labels):
   offset_file_path = os.path.join(data_source_folder, 'offsets.npz')
   if not os.path.isdir(target_folder): os.makedirs(target_folder)
   train_test_file = os.path.join(target_folder, 'train_test_indices.npz')
@@ -193,7 +211,7 @@ def load_data_into_hdf5(data_source_folder, target_folder):
     multiprocessing.Process(target=load_data_hdf5_process, args=(
       frame_paths, h5_output_dir, frame_shape,
       offsets[offset_start:offset_end], offset_start, offset_end,
-      saved_files, i
+      saved_files, i, binary_labels
     )).start()
 
 def create_and_load_synthetic_dataset(target_folder):
@@ -257,6 +275,6 @@ def download_movie():
 if __name__ == '__main__':
   # Pipeline: Download movie -> create dataset -> load into hdf5
   # download_movie()
-  # create_movie_dataset(args.data_source, args.target_folder)
-  # load_data_into_hdf5(args.data_source, args.target_folder)
-  create_and_load_synthetic_dataset(args.target_folder)
+  # create_movie_dataset(args.data_source, args.target_folder, args.binary_labels)
+  load_data_into_hdf5(args.data_source, args.target_folder, args.binary_labels)
+  # create_and_load_synthetic_dataset(args.target_folder)
