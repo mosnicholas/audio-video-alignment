@@ -18,6 +18,21 @@ def test_frame(frame_num):
   else:
     return False
 
+def test_synthetic_net():
+  height, width = 90, 120
+  white_frame = np.random.rand(height, width)
+  black_frame = np.zeros((height, width))
+  right = np.ones((1, 1, 10, height, width))
+  left = np.ones((1, 1, 10, height, width))
+  left_i, right_i = 0, 3
+  left[0, 0, left_i, :, :] = white_frame
+  right[0, 0, right_i, :, :] = white_frame
+  net.blobs['left'].data[...] = left
+  net.blobs['right'].data[...] = right
+  out = net.forward()
+  return out['probs'].argmax() == np.abs(left_i - right_i)
+
+
 def view_side_by_side_hdf5(frame_num):
   frame_path = '/mnt/data/clipped/hh_data/frame-%06d.h5' % frame_num
   from matplotlib import pyplot as plt
@@ -42,7 +57,8 @@ def view_side_by_side_hdf5(frame_num):
     a.set_yticklabels([])
   plt.show()
 
-# solver = caffe.SGDSolver('video_align/siamese_videonet_solver.prototxt')
-# solver.restore('/mnt/data/snapshots/videonet_iter_2706.solverstate')
+# solver = caffe.SGDSolver('/home/ubuntu/video_align/siamese_videonet_solver.prototxt')
+# for i in [(blob, solver.net.blobs['conv1'].data.shape) for blob in solver.net.blobs]: print i
+# solver.restore('/mnt/data/snapshots/videonet_iter_18402.solverstate')
 
 

@@ -102,10 +102,11 @@ def create_movie_dataset(movie_path, target_folder, binary_labels):
   video = VideoFileClip(movie_path)
   fps = video.fps
   num_frames = int(fps * video.duration)
-  video = video.resize(0.25)
-  first_frame = 700
+  video = video
+  first_frame = 19200
   num_cpus = multiprocessing.cpu_count()
 
+  num_frames = 20000
   saved_frames = set(map(lambda x: int(x) if x else 0, map(lambda f: ''.join(x for x in f if x.isdigit()), os.listdir(target_folder))))
   num_done = len(saved_frames)
   if num_done == 0:
@@ -275,6 +276,6 @@ def download_movie():
 if __name__ == '__main__':
   # Pipeline: Download movie -> create dataset -> load into hdf5
   # download_movie()
-  # create_movie_dataset(args.data_source, args.target_folder, args.binary_labels)
-  load_data_into_hdf5(args.data_source, args.target_folder, args.binary_labels)
+  create_movie_dataset(args.data_source, args.target_folder, args.binary_labels)
+  # load_data_into_hdf5(args.data_source, args.target_folder, args.binary_labels)
   # create_and_load_synthetic_dataset(args.target_folder)
