@@ -25,7 +25,7 @@ sed -i '/^PYTHON_INCLUDE/a    /usr/local/lib/python2.7/dist-packages/numpy/core/
 # edit these lines, add # to comment out
 # CHECK_LE(num_axes(), 4)
 #        << "Cannot use legacy accessors on Blobs with > 4 axes.";
-vi include/caffe/blob.hpp 
+# vi include/caffe/blob.hpp 
 
 # Caffe takes quite a bit of disk space to build, and we don't have very much on /.
 # Hence, we set the TMPDIR for to /mnt/build_tmp, under the assumption that our AMI has
@@ -42,6 +42,8 @@ EOF'
 sudo chmod 744 /etc/init.d/create_build_dir
 sudo /etc/init.d/create_build_dir
 sudo update-rc.d create_build_dir defaults
+
+echo 'export PYTHONPATH=/home/ubuntu/caffe/python' >> ~/.bash_profile
 
 # And finally build!
 make -j 8 all py
