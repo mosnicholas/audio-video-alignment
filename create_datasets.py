@@ -99,14 +99,13 @@ def create_movie_process(video, target_folder, start_i, end_i, first_i, pnum, sa
 
 def create_movie_dataset(movie_path, target_folder, binary_labels):
   if not os.path.isdir(target_folder): os.makedirs(target_folder)
-  video = VideoFileClip(movie_path)
+  video = VideoFileClip(movie_path).resize(0.25)
   fps = video.fps
   num_frames = int(fps * video.duration)
   video = video
   first_frame = 19200
   num_cpus = multiprocessing.cpu_count()
 
-  num_frames = 20000
   saved_frames = set(map(lambda x: int(x) if x else 0, map(lambda f: ''.join(x for x in f if x.isdigit()), os.listdir(target_folder))))
   num_done = len(saved_frames)
   if num_done == 0:

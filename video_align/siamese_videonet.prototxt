@@ -50,7 +50,8 @@ layer {
     stride: 2
     bias_term: false
     weight_filler {
-      type: "xavier"
+      type: "gaussian"
+      std: 0.001
     }
   }
 }
@@ -98,7 +99,8 @@ layer {
     stride: 2
     bias_term: false
     weight_filler {
-      type: "xavier"
+      type: "gaussian"
+      std: 0.001
     }
   }
 }
