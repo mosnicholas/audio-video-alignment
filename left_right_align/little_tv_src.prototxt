@@ -1,0 +1,171 @@
+name: "c3d_net"
+# Changes made: changed softmax to sigmoid cross entropy
+# Improvements to try: xavier
+layer {
+  name: "pair_data"
+  type: "HDF5Data"
+  top: "left"
+  top: "right"
+  top: "label"
+  include {
+    phase: TRAIN
+  }
+  hdf5_data_param {
+    source: "/mnt/data/blender/train_h5_list.txt"
+    batch_size: 8
+  }
+}
+layer {
+  name: "pair_data"
+  type: "HDF5Data"
+  top: "left"
+  top: "right"
+  top: "label"
+  include {
+    phase: TEST
+  }
+  hdf5_data_param {
+    source: "/mnt/data/blender/test_h5_list.txt"
+    batch_size: 8
+  }
+}
+
+# C3D Net
+
+layer {
+  name: "conv1"
+  type: "Convolution"
+  bottom: "left"
+  top: "conv1"
+  param {
+    name: "conv1_w"
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 128
+    kernel_size: 3
+    stride: 1
+    pad: 1
+    bias_term: false
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+  }
+}
+layer {
+  name: "relu1"
+  type: "ReLU"
+  bottom: "conv1"
+  top: "conv1"
+}
+
+layer {
+  name: "bn1"
+  type: "BatchNorm"
+  bottom: "conv1"
+  top: "bn1"
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+}
+
+# REPLICA
+# Name params same as previous network.
+
+# Recombination
+
+layer {
+  name: "recombine"
+  type: "Concat"
+  bottom: "bn1"
+  bottom: "bn1_rep"
+  top: "recombine"
+  concat_param {
+    axis: 1
+  }
+}
+
+layer {
+  name: "fc5"
+  type: "InnerProduct"
+  bottom: "recombine"
+  top: "fc5"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  inner_product_param {
+    num_output: 512
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 1
+    }
+  }
+}
+layer {
+  name: "relu7"
+  type: "ReLU"
+  bottom: "fc5"
+  top: "fc5"
+}
+
+layer {
+  name: "fc6"
+  type: "InnerProduct"
+  bottom: "fc5"
+  top: "fc6"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  inner_product_param {
+    num_output: 11
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+
+layer {
+  name: "loss"
+  type: "SoftmaxWithLoss"
+  bottom: "fc6"
+  bottom: "label"
+  top: "loss"
+}
+
+layer {
+  name: "acc"
+  type: "Accuracy"
+  bottom: "fc6"
+  bottom: "label"
+  top: "acc"
+  include: {
+    phase: TEST
+  }
+}

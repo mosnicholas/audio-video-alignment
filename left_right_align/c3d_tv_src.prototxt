@@ -1,4 +1,4 @@
-name: "siamese_caffenet_train_val"
+name: "c3d_net"
 # Changes made: changed softmax to sigmoid cross entropy
 # Improvements to try: xavier
 layer {
@@ -6,12 +6,12 @@ layer {
   type: "HDF5Data"
   top: "left"
   top: "right"
-  top: "label_bin"
+  top: "label"
   include {
     phase: TRAIN
   }
   hdf5_data_param {
-    source: "/mnt/data/dataset_prepared/examples_train.txt"
+    source: "/mnt/data/blender/train_h5_list.txt"
     batch_size: 8
   }
 }
@@ -20,12 +20,12 @@ layer {
   type: "HDF5Data"
   top: "left"
   top: "right"
-  top: "label_bin"
+  top: "label"
   include {
     phase: TEST
   }
   hdf5_data_param {
-    source: "/mnt/data/dataset_prepared/examples_test.txt"
+    source: "/mnt/data/blender/test_h5_list.txt"
     batch_size: 8
   }
 }
@@ -516,7 +516,7 @@ layer {
     decay_mult: 0
   }
   inner_product_param {
-    num_output: 2
+    num_output: 11
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -532,7 +532,7 @@ layer {
   name: "loss"
   type: "SoftmaxWithLoss"
   bottom: "fc6"
-  bottom: "label_bin"
+  bottom: "label"
   top: "loss"
 }
 
@@ -540,7 +540,7 @@ layer {
   name: "acc"
   type: "Accuracy"
   bottom: "fc6"
-  bottom: "label_bin"
+  bottom: "label"
   top: "acc"
   include: {
     phase: TEST

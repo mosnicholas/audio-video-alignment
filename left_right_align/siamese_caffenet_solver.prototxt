@@ -3,13 +3,13 @@ net: "siamese_caffenet_train_val.prototxt"
 # test_iter specifies how many forward passes the test should carry out.
 # Should be number of examples / test batch size
 test_iter: 312
-# Carry out testing every 500 training iterations.
-test_interval: 100
+# Carry out testing every x training iterations.
+test_interval: 500
 # The base learning rate, momentum and the weight decay of the network.
-base_lr: 0.01
+base_lr: 0.001
 lr_policy: "step"
 gamma: 0.1
-stepsize: 10000
+stepsize: 5000
 power: 0.75
 momentum: 0.9
 weight_decay: 0.0005
@@ -18,7 +18,7 @@ display: 100
 # The maximum number of iterations
 max_iter: 35000
 # snapshot intermediate results
-snapshot: 5000
-snapshot_prefix: "/mnt/data/snapshots/test1"
+snapshot: 1000
+snapshot_prefix: "/mnt/data/snapshots/real"
 # solver mode: CPU or GPU
 solver_mode: GPU

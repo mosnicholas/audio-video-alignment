@@ -1,5 +1,5 @@
 # The train/test net protocol buffer definition
-net: "c3d_tv.prototxt"
+net: "little_tv.prototxt"
 # test_iter specifies how many forward passes the test should carry out.
 # Should be number of examples / test batch size
 test_iter: 156
@@ -19,6 +19,6 @@ display: 100
 max_iter: 35000
 # snapshot intermediate results
 snapshot: 5000
-snapshot_prefix: "/mnt/data/snapshots/blender_lr"
+snapshot_prefix: "/mnt/data/snapshots/little_lr"
 # solver mode: CPU or GPU
 solver_mode: GPU

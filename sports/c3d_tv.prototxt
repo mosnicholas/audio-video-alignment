@@ -4,28 +4,26 @@ name: "c3d_net"
 layer {
   name: "pair_data"
   type: "HDF5Data"
-  top: "left"
-  top: "right"
+  top: "sequence"
   top: "label"
   include {
     phase: TRAIN
   }
   hdf5_data_param {
-    source: "/mnt/data/blender/train_h5_list.txt"
+    source: "/mnt/data/sports/train_files.txt"
     batch_size: 8
   }
 }
 layer {
   name: "pair_data"
   type: "HDF5Data"
-  top: "left"
-  top: "right"
+  top: "sequence"
   top: "label"
   include {
     phase: TEST
   }
   hdf5_data_param {
-    source: "/mnt/data/blender/test_h5_list.txt"
+    source: "/mnt/data/sports/test_files.txt"
     batch_size: 8
   }
 }
@@ -35,7 +33,7 @@ layer {
 layer {
   name: "conv1"
   type: "Convolution"
-  bottom: "left"
+  bottom: "sequence"
   top: "conv1"
   param {
     name: "conv1_w"
@@ -454,448 +452,10 @@ layer {
   }
 }
 
-# REPLICA
-layer {
-  name: "conv1_rep"
-  type: "Convolution"
-  bottom: "right"
-  top: "conv1_rep"
-  param {
-    name: "conv1_w"
-    lr_mult: 1
-    decay_mult: 1
-  }
-  convolution_param {
-    num_output: 64
-    kernel_size: 3
-    stride: 1
-    pad: 1
-    bias_term: false
-    weight_filler {
-      type: "gaussian"
-      std: 0.01
-    }
-  }
-}
-layer {
-  name: "relu1_rep"
-  type: "ReLU"
-  bottom: "conv1_rep"
-  top: "conv1_rep"
-}
-
-layer {
-  name: "rs1a_rep"
-  type: "Reshape"
-  bottom: "conv1_rep"
-  top: "rs1a_rep"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 0
-      dim: 960
-      dim: 64
-    }
-  }
-}
-
-layer {
-  name: "pool1_rep"
-  type: "Pooling"
-  bottom: "rs1a_rep"
-  top: "pool1_rep"
-  pooling_param {
-    pool: MAX
-    kernel_size: 2 # First time just pool over h and w to preserve temporal
-    stride: 2
-  }
-}
-
-layer {
-  name: "rs1b_rep"
-  type: "Reshape"
-  bottom: "pool1_rep"
-  top: "rs1b_rep"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 0
-      dim: 10
-      dim: 48
-      dim: 32
-    }
-  }
-}
-
-layer {
-  name: "bn1_rep"
-  type: "BatchNorm"
-  bottom: "rs1b_rep"
-  top: "bn1_rep"
-  param {
-    lr_mult: 0
-  }
-  param {
-    lr_mult: 0
-  }
-  param {
-    lr_mult: 0
-  }
-}
-
-layer {
-  name: "conv2_rep"
-  type: "Convolution"
-  bottom: "bn1_rep"
-  top: "conv2_rep"
-  param {
-    name: "conv2_w"
-    lr_mult: 1
-    decay_mult: 1
-  }
-  convolution_param {
-    num_output: 128
-    kernel_size: 3
-    pad: 0
-    pad: 1
-    pad: 1
-    stride: 1
-    bias_term: false
-    weight_filler {
-      type: "gaussian"
-      std: 0.01
-    }
-  }
-}
-layer {
-  name: "relu2_rep"
-  type: "ReLU"
-  bottom: "conv2_rep"
-  top: "conv2_rep"
-}
-
-layer {
-  name: "bn2_rep"
-  type: "BatchNorm"
-  bottom: "conv2_rep"
-  top: "bn2_rep"
-  param {
-    lr_mult: 0
-  }
-  param {
-    lr_mult: 0
-  }
-  param {
-    lr_mult: 0
-  }
-}
-
-layer {
-  name: "rs2a_rep"
-  type: "Reshape"
-  bottom: "bn2_rep"
-  top: "rs2a_rep"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 0
-      dim: 384
-      dim: 32
-    }
-  }
-}
-
-layer {
-  name: "pool2_rep"
-  type: "Pooling"
-  bottom: "rs2a_rep"
-  top: "pool2_rep"
-  pooling_param {
-    pool: MAX
-    kernel_h: 4
-    kernel_w: 2
-    stride_h: 4
-    stride_w: 2
-  }
-}
-
-layer {
-  name: "rs2b_rep"
-  type: "Reshape"
-  bottom: "pool2_rep"
-  top: "rs2b_rep"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 0
-      dim: 4
-      dim: 24
-      dim: 16
-    }
-  }
-}
-
-
-layer {
-  name: "conv3a_rep"
-  type: "Convolution"
-  bottom: "rs2b_rep"
-  top: "conv3a_rep"
-  param {
-    name: "conv3a_w"
-    lr_mult: 1
-    decay_mult: 1
-  }
-  convolution_param {
-    num_output: 256
-    kernel_size: 3
-    pad: 1
-    bias_term: false
-    weight_filler {
-      type: "gaussian"
-      std: 0.01
-    }
-  }
-}
-layer {
-  name: "relu3a_rep"
-  type: "ReLU"
-  bottom: "conv3a_rep"
-  top: "conv3a_rep"
-}
-
-layer {
-  name: "conv3b_rep"
-  type: "Convolution"
-  bottom: "conv3a_rep"
-  top: "conv3b_rep"
-  param {
-    name: "conv3b_w"
-    lr_mult: 1
-    decay_mult: 1
-  }
-  convolution_param {
-    num_output: 256
-    pad: 1
-    kernel_size: 3
-    bias_term: false
-    weight_filler {
-      type: "gaussian"
-      std: 0.01
-    }
-  }
-}
-layer {
-  name: "relu3b_rep"
-  type: "ReLU"
-  bottom: "conv3b_rep"
-  top: "conv3b_rep"
-}
-
-layer {
-  name: "rs3a_rep"
-  type: "Reshape"
-  bottom: "conv3b_rep"
-  top: "rs3a_rep"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 0
-      dim: 96
-      dim: 16
-    }
-  }
-}
-
-layer {
-  name: "pool3_rep"
-  type: "Pooling"
-  bottom: "rs3a_rep"
-  top: "pool3_rep"
-  pooling_param {
-    pool: MAX
-    kernel_h: 4
-    kernel_w: 2
-    stride_h: 4
-    stride_w: 2
-  }
-}
-
-layer {
-  name: "rs3b_rep"
-  type: "Reshape"
-  bottom: "pool3_rep"
-  top: "rs3b_rep"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 0
-      dim: 2
-      dim: 12
-      dim: 8
-    }
-  }
-}
-
-layer {
-  name: "bn3_rep"
-  type: "BatchNorm"
-  bottom: "rs3b_rep"
-  top: "bn3_rep"
-  param {
-    lr_mult: 0
-  }
-  param {
-    lr_mult: 0
-  }
-  param {
-    lr_mult: 0
-  }
-}
-
-layer {
-  name: "conv4a_rep"
-  type: "Convolution"
-  bottom: "bn3_rep"
-  top: "conv4a_rep"
-  param {
-    name: "conv4a_w"
-    lr_mult: 1
-    decay_mult: 1
-  }
-  convolution_param {
-    num_output: 512
-    pad: 1
-    kernel_size: 3
-    bias_term: false
-    weight_filler {
-      type: "gaussian"
-      std: 0.01
-    }
-  }
-}
-layer {
-  name: "relu4a_rep"
-  type: "ReLU"
-  bottom: "conv4a_rep"
-  top: "conv4a_rep"
-}
-
-layer {
-  name: "conv4b_rep"
-  type: "Convolution"
-  bottom: "conv4a_rep"
-  top: "conv4b_rep"
-  param {
-    name: "conv4b_w"
-    lr_mult: 1
-    decay_mult: 1
-  }
-  convolution_param {
-    num_output: 512
-    kernel_size: 3
-    pad: 1
-    bias_term: false
-    weight_filler {
-      type: "gaussian"
-      std: 0.01
-    }
-  }
-}
-layer {
-  name: "relu4b_rep"
-  type: "ReLU"
-  bottom: "conv4b_rep"
-  top: "conv4b_rep"
-}
-
-layer {
-  name: "rs4a_rep"
-  type: "Reshape"
-  bottom: "conv4b_rep"
-  top: "rs4a_rep"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 0
-      dim: 24
-      dim: 8
-    }
-  }
-}
-
-layer {
-  name: "pool4_rep"
-  type: "Pooling"
-  bottom: "rs4a_rep"
-  top: "pool4_rep"
-  pooling_param {
-    pool: MAX
-    kernel_h: 4
-    kernel_w: 2
-    stride_h: 4
-    stride_w: 2
-  }
-}
-
-layer {
-  name: "rs4b_rep"
-  type: "Reshape"
-  bottom: "pool4_rep"
-  top: "rs4b_rep"
-  reshape_param {
-    shape {
-      dim: 0
-      dim: 0
-      dim: 2
-      dim: 3
-      dim: 4
-    }
-  }
-}
-
-layer {
-  name: "relu6_rep"
-  type: "ReLU"
-  bottom: "rs4b_rep"
-  top: "rs4b_rep"
-}
-
-layer {
-  name: "bn4b_rep"
-  type: "BatchNorm"
-  bottom: "rs4b_rep"
-  top: "bn4b_rep"
-  param {
-    lr_mult: 0
-  }
-  param {
-    lr_mult: 0
-  }
-  param {
-    lr_mult: 0
-  }
-}
-
-# Name params same as previous network.
-
-# Recombination
-
-layer {
-  name: "recombine"
-  type: "Concat"
-  bottom: "bn4b"
-  bottom: "bn4b_rep"
-  top: "recombine"
-  concat_param {
-    axis: 1
-  }
-}
-
 layer {
   name: "fc5"
   type: "InnerProduct"
-  bottom: "recombine"
+  bottom: "bn4b"
   top: "fc5"
   param {
     lr_mult: 1
@@ -906,7 +466,7 @@ layer {
     decay_mult: 0
   }
   inner_product_param {
-    num_output: 256
+    num_output: 512
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -938,7 +498,7 @@ layer {
     decay_mult: 0
   }
   inner_product_param {
-    num_output: 11
+    num_output: 97
     weight_filler {
       type: "gaussian"
       std: 0.01

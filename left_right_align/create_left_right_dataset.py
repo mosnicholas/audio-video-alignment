@@ -1,324 +1,190 @@
 import os
 import argparse
 import csv
+import h5py
 import shutil
 import subprocess
+import time
 import numpy as np
 import moviepy
 import multiprocessing
+import random
 from scipy import misc
-from random import randint, random as rand
 from moviepy.editor import VideoFileClip, AudioFileClip, ImageSequenceClip, CompositeVideoClip, TextClip
 
 parser = argparse.ArgumentParser(
-  description='Create a left / right alignment dataset from a local video file.')
-parser.add_argument('--target_folder', default='/mnt/data/dataset',
+  description='Download a source video and create a left / right alignment dataset.')
+parser.add_argument('--target_folder', default='/mnt/data/blender',
   help='The parent directory for the dataset.')
-parser.add_argument('--source_path', default='/mnt/data/source/hitch_hiker.mp4',
-  help='The path to the source video')
-parser.add_argument('--youtube_id', default=False,
+parser.add_argument('--youtube_url', default='https://www.youtube.com/watch?v=eRsGyueVLvQ',
   help='If specified, the youtube url will be downloaded as source.')
-parser.add_argument('--youtube_target', default='./data/source/',
-  help='Location to store the downloaded source video.')
 parser.add_argument('--middle_gap_pixel_size', default=0,
   help='The size of the gap between the left and right images.')
-parser.add_argument('--output_starting_ind', default=1,
+parser.add_argument('--resume', default=False,
   help='The index to start counting at for output files.')
-parser.add_argument('--output_images', default=True,
-  help='Output sequences of .jpeg files. If false, .mp4 videos will be generated.')
-parser.add_argument('--presentation_movie', default=False,
-  help='Output sequences of .jpeg files. If false, .mp4 videos will be generated.')
 parser.add_argument('--frame_stride', default=False,
   help='Output sequences will effectively reduce the frame rate by this factor.')
+parser.add_argument('--num_sequences', default=50000,
+  help='How many sequences to output if space allows')
 args = parser.parse_args()
 
-args.youtube_id = 'XIeFKTbg3Aw'
+youtube_urls = ["https://www.youtube.com/watch?v=aqz-KE-bpKQ&list=PL6B3937A5D230E335&index=9", \
+"https://www.youtube.com/watch?v=SkVqJ1SGeL0&index=1&list=PL6B3937A5D230E335", \
+"https://www.youtube.com/watch?v=lqiN98z6Dak&list=PL6B3937A5D230E335&index=2", \
+"https://www.youtube.com/watch?v=Y-rmzh0PI3c&list=PL6B3937A5D230E335&index=3", \
+"https://www.youtube.com/watch?v=Z4C82eyhwgU&list=PL6B3937A5D230E335&index=4", \
+"https://www.youtube.com/watch?v=eRsGyueVLvQ&index=5&list=PL6B3937A5D230E335", \
+"https://www.youtube.com/watch?v=R6MlUcmOul8&list=PL6B3937A5D230E335&index=6", \
+"https://www.youtube.com/watch?v=TLkA0RELQ1g&index=8&list=PL6B3937A5D230E335"]
 
 def rgb2gray(rgb):
   return np.dot(rgb[...,:3], [0.299, 0.587, 0.114])
 
-def download_youtube_video(youtube_id, target_path, create_subtitles=False):
-  target_filename = os.path.join(target_path, 'hitch_hiker.mp4')
-  command = 'youtube-dl %s -o %s' % (youtube_id, target_filename)
-  if subprocess.call(command, shell=True) == 0:
-    return True
-  return False
+import subprocess
+def space_left():
+  df = subprocess.Popen(["df", "/mnt"], stdout=subprocess.PIPE)
+  output = df.communicate()[0]
+  device, size, used, available, percent, mountpoint = \
+    output.split("\n")[1].split()
+  return int(size), int(available), int(used)
 
 def main():
-  if args.youtube_id:
-    print 'Downloading video with youtube-dl...'
-    download_youtube_video(args.youtube_id, args.youtube_target)
-  if args.presentation_movie:
-    print("In Presentation Movie mode...")
-    split_video_pres()
-  elif args.frame_stride:
-    print("In stride mode...")
-    split_video_stride()
+  create_examples()
+
+def download_youtube_video(url, video_path, create_subtitles=False):
+  try:
+    os.remove(video_path)
+  except OSError:
+    pass
+  command = 'youtube-dl -o %s %s' % (video_path, url) 
+  if subprocess.check_call(command, shell=True) == 0:
+    print("Download success.")
+    time.sleep(15)
+    return True
+  print("Download failed.")
+  return False
+
+def write_save_state(curr_seg, curr_video): 
+  save_state_path = os.path.join(args.target_folder, 'save_state.txt')
+  with open(save_state_path, 'w') as save_state_file:
+    save_state_file.write(str(curr_seg) + "," + str(curr_video))
+   
+def load_video(index):
+  video_path = os.path.join(args.target_folder, 'video.mp4')
+  result = download_youtube_video(youtube_urls[index], video_path)
+  if result:
+    print('Downloaded video: {:s}'.format(youtube_urls[index]))
+    return VideoFileClip(video_path, audio=False)
+ 
+def create_examples():
+
+  stride = 2
+
+  if (args.resume):
+    curr_seg, curr_video = open(os.path.join(args.target_folder, 'save_state.txt'), 'r').read().split(",")
+    curr_seg, curr_video = int(curr_seg), int(curr_video)
+    print("Resuming from segment {:d}.".format(curr_seg))
   else:
-    print("In normal mode...")
-    split_video()
-
-def split_video_pres():
-
-  movie_title = os.path.split(args.source_path)[-1]
-  video = VideoFileClip(args.source_path, audio=False)
-  video = video.subclip((1, 8, 36), (1, 8, 41))
-  video = video.resize((128, 96))
-  framerate = video.fps
-  duration_seconds = video.duration
-  print("Clip has duration of " + str(duration_seconds) + "")
-  width = (np.size(video.get_frame(0), 1) - args.middle_gap_pixel_size) / 2
-  left_video = moviepy.video.fx.all.crop(video, x1=0, width=width)
-  right_video = moviepy.video.fx.all.crop(video, x1=width + args.middle_gap_pixel_size, width=width)
-  output_ind = args.output_starting_ind
-  offsets_filename = "pres-offsets.txt"
-  offset_csv = os.path.join(args.target_folder, offsets_filename)
-  file_prefix = "pres"
-
-  pres_offset = 10
-
-  all_left_frames = []
-  all_right_frames = []
-
-  left_frame_iterator = left_video.iter_frames()
-  for ind, right_frame in enumerate(right_video.iter_frames()):
-    if ind >= pres_offset:
-      left_frame = rgb2gray(left_frame_iterator.next())
-      right_frame = rgb2gray(right_frame)
-      if (ind % 10 == 0): # INITIALIZE
-        left_frames = []
-        right_frames = []
-      all_right_frames.append(np.transpose(np.tile(right_frame, (3, 1, 1))))
-      right_frames.append(right_frame)
-      all_left_frames.append(np.transpose(np.tile(left_frame, (3, 1, 1))))
-      left_frames.append(left_frame)
-      if (ind % 10 == 9): # SAVE SEGMENT FRAMES TO JPEG
-        for frame_ind, left_frame in enumerate(left_frames):
-          misc.toimage(left_frame, cmin=np.min(left_frame), cmax=np.max(left_frame)).save(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-left.jpeg').format(output_ind, frame_ind)))
-        for frame_ind, right_frame in enumerate(right_frames):
-          misc.toimage(right_frame, cmin=np.min(right_frame), cmax=np.max(right_frame)).save(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, frame_ind)))
-        output_ind += 1
-      if (ind % 1000 == 0):
-        print('Finished processing {:d} datapoints.'.format(output_ind))
-  with open(offset_csv, 'w') as offset_csv_file:
-    offset_csv_file.write(str(pres_offset) + "\n")
-  leftMovie = ImageSequenceClip(all_left_frames, fps=framerate);
-  rightMovie = ImageSequenceClip(all_right_frames, fps=framerate);
-  rightMovie.set_pos((64, 0))
-  #labelClip = TextClip("offset: " + str(pres_offset))
-  #labelClip.set_position("center")
-  compositeMovie = CompositeVideoClip([leftMovie, rightMovie], size=(128, 96))
-  compositeMovie.write_videofile(os.path.join(args.target_folder, "pres_video.mp4"), codec='libx264', audio=False)
-  return True
-
-def split_video_stride():
-  movie_title = os.path.split(args.source_path)[-1]
+    curr_seg = 0
+    curr_video = 0
+    write_save_state(0, 0)
+    
   print("Loading video")
-  video = VideoFileClip(args.source_path, audio=False)
-  if (args.presentation_movie):
-    video = video.subclip((1, 8, 36), (1, 8, 41))
+
+  video = load_video(curr_video)
   print("Resizing and trimming source video")
-  start_frame = 10
+  start_frame = 0
   #print("Clipping to duration [{:d}, {:d}]".format(start_time, video.duration))
-  video = video.subclip(start_time, video.duration).resize((128, 96))
-  print("Generating left and right source videos...")
-  if (args.presentation_movie):
-    video.write_videofile(os.path.join(args.target_folder, 'pres_video.mp4'), codec='libx264', audio=False)
-  framerate = video.fps
-  width = (np.size(video.get_frame(0), 1) - args.middle_gap_pixel_size) / 2
-  num_frames = int(video.fps * video.duration)
-  left_video = moviepy.video.fx.all.crop(video, x1=0, width=width)
-  right_video = moviepy.video.fx.all.crop(video, x1=width + args.middle_gap_pixel_size, width=width)
-
-  frame_ind = 0
-  while True:
-    try:
-      frame_t = float(frame_ind) / framerate
-      left_frame = left_video.get_frame(frame_t)
-      right_frame = right_video.get_frame(frame_t)
-      misc.toimage(left_frame, cmin=np.min(left_frame), cmax=np.max(left_frame)).save(os.path.join(args.target_folder, ('frame-{:06d}-right.jpeg').format(frame_ind)))
-      misc.toimage(right_frame, cmin=np.min(right_frame), cmax=np.max(right_frame)).save(os.path.join(args.target_folder, ('frame-{:06d}-left.jpeg').format(frame_ind)))
-      if frame_ind % 100 == 0:
-        print("Done with " + str(frame_ind))
-      frame_ind += 1
-    except Error as e:
-      print("Finished processing {:d} frames".format(frame_ind))
-      print e
-      break
-  return True
-
-  output_ind = args.output_starting_ind
-  file_prefix = "seg"
-  offsets = np.random.randint(1, 11, 20000)
-  offsets[::2] = 0
-  offset_sets = [{ 'id': '%06d' % output_ind, 'offset_frames': offsets[output_ind] } for output_ind in xrange(20000)]
-
-  with open(os.path.join(args.target_folder, 'offsets.csv'), 'w') as offset_csv_file:
-    w = csv.DictWriter(offset_csv_file, fieldnames=['id', 'offset_frames'])
-    w.writeheader()
-    w.writerows(offset_sets)
-    print('Wrote offsets.')
-
-  print "Using stride 2..."
-  stride = 3
-  poss_left_frames = []
-  poss_right_frames = []
-
-  num_cpus = 1 #multiprocessing.cpu_coun
-  process_inds_stride(left_video, right_video, 0, 20000, offsets)
-  frames_per_process = 20000/num_cpus
-  '''for i in xrange(num_cpus):
-    start_ind = i * frames_per_process
-    end_ind = 20000 if i == num_cpus - 1 else (i + 1)*frames_per_process
-    multiprocessing.Process(
-      target=process_inds_stride,
-      args=(left_video, right_video, start_ind, end_ind, offsets)
-    ).start()'''
-
-offsets_recorded = 0
-def record_offsets(start_ind, end_ind, offsets, offsets_to_add):
-  offsets[start_ind:end_ind] = offsets_to_add
-  global offsets_recorded
-  offsets_recorded += 1
-  print str(offsets_recorded) + " offsets recorded of " + str(multiprocessing.cpu_count())
-  if offsets_recorded == multiprocessing.cpu_count():
-    with open(os.path.join(args.target_folder, 'offsets.csv'), 'w') as offset_csv_file:
-      w = csv.DictWriter(offset_csv_file, fieldnames=['id', 'offset_frames'])
-      w.writeheader()
-      w.writerows(offsets)
-
-def process_inds_stride(left_video, right_video, start_ind, end_ind, full_offsets):
-  file_prefix = 'seg'
-  offsets = []
-  output_ind = start_ind
-
-  
-'''
-    offset = full_offsets[ind+1]
-    assert full_offsets[ind] == 0, "Offset should be zero."
-    assert offset > 0
-    offset_left = randint(0, 1) == 1 # coin flip
-
-    frames_out = range(ind, ind + 19)[::2]
-    offset_frames_out = range(ind + offset, ind + offset + 19)[::2]
-    #left_frames_out = poss_left_frames[0:28:3]
-    #offset_frames_out = poss_left_frames[offset:28+offset:3] if offset_left else poss_right_frames[offset:28+offset:3]
-
-    for arr_ind, frame_ind in enumerate(frames_out):
-      #misc.toimage(right_frame, cmin=np.min(right_frame), cmax=np.max(right_frame)).save(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, frame_ind)))
-
-    #offsets.append({ 'id': '%06d' % output_ind, 'offset_frames': 0 })
-    output_ind += 1
-    if (offset_left):
-      for arr_ind, frame_ind in enumerate(frames_out):
-        right_video.save_frame(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, arr_ind)), frame_ind)
-      for arr_ind, frame_ind in enumerate(offset_frames_out):
-        left_video.save_frame(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-left.jpeg').format(output_ind, arr_ind)), frame_ind)
-    else:
-      for arr_ind, frame_ind in enumerate(offset_frames_out):
-        right_video.save_frame(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, arr_ind)), frame_ind)
-      for arr_ind, frame_ind in enumerate(frames_out):
-        left_video.save_frame(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-left.jpeg').format(output_ind, arr_ind)), frame_ind)
-    output_ind += 1
-  #  offsets.append({ 'id': '{:06d}'.format(output_ind), 'offset_frames': offset })
-    if (ind % 10 == 0):
-      #print('Finished processing {:d} outputs.'.format(output_ind-1))
-      print('At video frame ' + str(ind) + ' of ' + str(20000))
-  #record_offsets(start_ind, end_ind, full_offsets, offsets)
-  #with open(os.path.join(args.target_folder, 'offsets.csv'), 'w') as offset_csv_file:
-  #  w = csv.DictWriter(offset_csv_file, fieldnames=['id', 'offset_frames'])
-  #  w.writeheader()
-  #  w.writerows(offsets)
-  #  print('Wrote offsets.')
-  return True
-'''
-def split_video():
-
-  movie_title = os.path.split(args.source_path)[-1]
-  video = VideoFileClip(args.source_path, audio=False)
-  if (args.presentation_movie):
-    video = video.subclip((1, 8, 36), (1, 8, 41))
   video = video.resize((128, 96))
-  if (args.presentation_movie):
-    video.write_videofile(os.path.join(args.target_folder, 'pres_video.mp4'), codec='libx264', audio=False)
-  framerate = video.fps
-  width = (np.size(video.get_frame(0), 1) - args.middle_gap_pixel_size) / 2
-  left_video = moviepy.video.fx.all.crop(video, x1=0, width=width)
-  right_video = moviepy.video.fx.all.crop(video, x1=width + args.middle_gap_pixel_size, width=width)
-  right_frame_iterator = right_video.iter_frames()
-  output_ind = args.output_starting_ind
-  file_prefix = "seg"
-  offsets_filename = "offsets.csv" 
-  offset_csv = os.path.join(args.target_folder, offsets_filename)
-  offsets = []
+  print("Generating left and right source videos...")
+  width = (np.size(video.get_frame(0), 1) - args.middle_gap_pixel_size) / stride
+  num_frames = int(video.fps * video.duration)
 
-  for ind, left_frame in enumerate(left_video.iter_frames()):
-    if ind > 800:
-      break
-    left_frame = rgb2gray(left_frame)
-    right_frame = rgb2gray(right_frame_iterator.next())
-    if (ind % 20 == 0): # INITIALIZE
-      left_frames = []
-      right_frames = []
-      offset_frames = []
-      first_start = ind
-      offset = randint(1,10)
-      second_start = first_start + offset
-      offset_left = randint(0, 1) == 1
-    if (ind >= first_start and ind < first_start + 10): # ADD FRAMES
-      right_frames.append(right_frame)
-      left_frames.append(left_frame)
-    if (ind >= second_start and ind < second_start + 10): # ADD OFFSET FRAMES
-      if (offset_left):
-        offset_frames.append(left_frame)
-      else:
-        offset_frames.append(right_frame)
-    if (ind % 20 == 19): # SAVE SEGMENT FRAMES TO JPEG
-      if args.output_images:
-        assert len(left_frames) == 10, 'Only added ' + str(len(left_frames)) + ' left frames on segment ' + str(output_ind) + '. Should have 10.'
-        assert len(right_frames) == 10, 'Only added ' + str(len(right_frames)) + ' right frames on segment ' + str(output_ind) + '. Should have 10.'
-        assert len(offset_frames) == 10, 'Only added ' + str(len(offset_frames)) + ' offset frames on segment ' + str(output_ind) + '. Should have 10.'
-        for frame_ind, left_frame in enumerate(left_frames):
-          misc.toimage(left_frame, cmin=np.min(left_frame), cmax=np.max(left_frame)).save(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-left.jpeg').format(output_ind, frame_ind)))
-        for frame_ind, right_frame in enumerate(right_frames):
-          misc.toimage(right_frame, cmin=np.min(right_frame), cmax=np.max(right_frame)).save(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, frame_ind)))
-      else:
-        left_video_out = ImageSequenceClip(left_frames, fps=framerate)
-        left_video_out.write_videofile(os.path.join(args.target_folder, file_prefix + '-{:06d}-left.mp4' % output_ind), codec='libx264', audio=False)
-        right_video_out = ImageSequenceClip(right_frames, fps=framerate)
-        right_video_out.write_videofile(os.path.join(args.target_folder, file_prefix + '-{:06d}-right.mp4' % output_ind), codec='libx264', audio=False)
-      offsets.append({ 'id': '%06d' % output_ind, 'offset_frames': 0 })
-      output_ind += 1
-      if (offset_left):
-        if args.output_images:
-          for frame_ind, offset_frame in enumerate(offset_frames):
-            misc.toimage(offset_frame, cmin=np.min(offset_frame), cmax=np.max(offset_frame)).save(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-left.jpeg').format(output_ind, frame_ind)))
-          for frame_ind, right_frame in enumerate(right_frames):
-            misc.toimage(right_frame, cmin=np.min(right_frame), cmax=np.max(right_frame)).save(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, frame_ind)))
+  num_segments_out = int(args.num_sequences)
+
+  offsets = np.random.randint(0, 11, num_segments_out)
+
+  test_inds = random.sample(range(num_segments_out), num_segments_out/40)
+  in_train = np.array([True] * num_segments_out)
+  in_train[test_inds] = False
+
+  # Setup list of h5 filenames
+  filenames_train = []
+  filenames_test = []
+  filenames_train_path = os.path.join(args.target_folder, 'train_h5_list.txt')
+  filenames_test_path = os.path.join(args.target_folder, 'test_h5_list.txt')
+  try:
+    os.remove(filenames_train_path)
+    os.remove(filenames_test_path)
+  except OSError:
+    pass
+
+  frame_ind = curr_seg * stride if args.resume else 0 # If you resume from seg 10, that is stored at 69, so start from 50
+  
+  curr_frames = np.empty((1, 1, 1, 96, 128))
+  while curr_video < len(youtube_urls) and curr_seg < num_segments_out:
+
+    curr_frame = np.empty((1, 1, 1, 96, 128)) 
+    curr_frame_rgb = video.get_frame(float(frame_ind)/video.fps) 
+    curr_frame[...] = rgb2gray(curr_frame_rgb)
+    curr_frames = np.concatenate((curr_frames, curr_frame), axis=2)
+    if np.shape(curr_frames)[2] > 20:
+      curr_frames = curr_frames[:, :, 1:, :, :]
+
+    if np.shape(curr_frames)[2] == 20 and frame_ind % stride == 0: # Make an example every 2 frames
+      offset = offsets[curr_seg]
+      offset_left = np.random.randint(2) == 1
+      left_frame = np.empty((1, 1, 10, 96, width))
+      left_frame[...] = curr_frames[0, 0, offset:10+offset, :, 0:width] if offset_left else curr_frames[0, 0, 0:10, :, 0:width]
+      right_frame = np.empty((1, 1, 10, 96, width))
+      right_frame[...] = curr_frames[0, 0, 0:10, :, width:] if offset_left else curr_frames[0, 0, offset:10+offset, :, width:]
+
+      left_frame *= 1.0/255
+      right_frame *= 1.0/255
+
+      # Save h5 file
+      h5_location = os.path.join(args.target_folder, 'seg-{:06d}.h5'.format(curr_seg))
+      with h5py.File(h5_location, 'w') as f:
+        f['left'] = left_frame
+        f['right'] = right_frame
+        label_mat = np.zeros((1, 1, 1, 1))
+        label_mat[0, 0, 0, 0] = offsets[curr_seg]
+        f['label'] = label_mat
+        label_mat_bin = np.zeros((1, 1, 1, 1))
+        label_mat_bin[0, 0, 0, 0] = offsets[curr_seg] > 0
+        f['label_bin'] = label_mat_bin
+        #print("Writing to " + h5_location1)
+        if in_train[curr_seg]:
+          filenames_train.append(h5_location)
         else:
-          left_video_out = ImageSequenceClip(offset_frames, fps=framerate)
-          left_video_out.write_videofile(os.path.join(args.target_folder, file_prefix + '-{:06d}-left.mp4' % output_ind), codec='libx264', audio=False)
-          right_video_out = ImageSequenceClip(right_frames, fps=framerate)
-          right_video_out.write_videofile(os.path.join(args.target_folder, file_prefix + '-{:06d}-right.mp4' % output_ind), codec='libx264', audio=False)
-      else:
-        if args.output_images:
-          for frame_ind, left_frame in enumerate(left_frames):
-            misc.toimage(left_frame, cmin=np.min(left_frame), cmax=np.max(left_frame)).save(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-left.jpeg').format(output_ind, frame_ind)))
-          for frame_ind, offset_frame in enumerate(offset_frames):
-            misc.toimage(offset_frame, cmin=np.min(offset_frame), cmax=np.max(offset_frame)).save(os.path.join(args.target_folder, (file_prefix + '-{:06d}-frame-{:02d}-right.jpeg').format(output_ind, frame_ind)))
-        else:
-          left_video_out = ImageSequenceClip(left_frames, fps=framerate)
-          left_video_out.write_videofile(os.path.join(args.target_folder, file_prefix + '-{:06d}-left.mp4' % output_ind), codec='libx264', audio=False)
-          right_video_out = ImageSequenceClip(offset_frames, fps=framerate)
-          right_video_out.write_videofile(os.path.join(args.target_folder, file_prefix + '-{:06d}-right.mp4' % output_ind), codec='libx264', audio=False)
-      offsets.append({ 'id': '{:06d}'.format(output_ind), 'offset_frames': offset })
-      output_ind += 1
-    if (ind % 100 == 0):
-      print('Finished processing {:d} datapoints.'.format(output_ind))
-  with open(offset_csv, 'w') as offset_csv_file:
-    w = csv.DictWriter(offset_csv_file, fieldnames=['id', 'offset_frames'])
-    w.writeheader()
-    w.writerows(offsets)
-  return True
+          filenames_test.append(h5_location)
+
+      # Save state
+      curr_seg += 1
+      write_save_state(curr_seg, curr_video)
+    
+      # Update filename list
+      if curr_seg % 100 == 0 or curr_seg == num_segments_out:
+        print str(curr_seg) + ' segments processed...'
+        print("On frame {:d} of {:d}".format(frame_ind, num_frames))
+        with open(filenames_train_path, 'a') as f:
+          for filename_train in filenames_train:
+            f.write(filename_train + '\n')
+        with open(filenames_test_path, 'a') as f:
+          for filename_test in filenames_test:
+            f.write(filename_test + '\n')
+        filenames_train = []
+        filenames_test = []
+
+    frame_ind += 1
+    if frame_ind == num_frames:
+      curr_video += 1
+      video = load_video(curr_video)
+      video = video.resize((128, 96))
+      num_frames = int(video.duration * video.fps)
+      frame_ind = 0
+      curr_frames = np.empty((1, 1, 1, 96, 128))
+
+  print("Created {:d} segments from {:d} sources videos.".format(curr_seg, curr_video))
 
 main()
